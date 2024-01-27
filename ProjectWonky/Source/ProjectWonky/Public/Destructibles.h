@@ -40,6 +40,14 @@ private:
 	UPROPERTY()
 	UWorld* world;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Stats, meta = (AllowPrivateAccess))
+	bool bHasDied;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Stats, meta = (AllowPrivateAccess))
+	float materialDefaultValue;
+
+	UFUNCTION()
+	void TickMaterialFade(float _dt);
+
 private:
 
 	UFUNCTION()
