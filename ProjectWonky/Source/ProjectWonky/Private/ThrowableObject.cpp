@@ -5,6 +5,7 @@
 
 #include "Destructibles.h"
 #include "Components/BoxComponent.h"
+#include "Kismet/GameplayStatics.h"
 #include "ProjectWonky/EnemyBase.h"
 
 // Sets default values
@@ -33,7 +34,7 @@ AThrowableObject::AThrowableObject()
 void AThrowableObject::BeginPlay()
 {
 	Super::BeginPlay();
-
+	canplaySound = true;
 	this->Tags.AddUnique(FName("Throwable"));
 	mesh->ComponentTags.AddUnique(FName("Throwable"));
 
@@ -46,6 +47,19 @@ void AThrowableObject::Hit_BeginOverlap(UPrimitiveComponent* _overlappedComponen
 {
 	if (!bIsUsed)
 		return;
+
+	if (canplaySound)
+	{
+		canplaySound = false;
+		GetWorld()->GetTimerManager().SetTimer(
+		soundTimerHandle,
+			this,
+			&AThrowableObject::CanPlayNewSound,
+			0.3f,
+			false);
+		UGameplayStatics::PlaySound2D(GetWorld(), impactSound);
+	}
+	
 
 	if (ADestructibles* destuctable = Cast<ADestructibles>(_otherActor))
 	{
@@ -119,5 +133,10 @@ USceneComponent* AThrowableObject::GetArrowPosition()
 void AThrowableObject::DestroySoon()
 {
 	this->Destroy();
+}
+
+void AThrowableObject::CanPlayNewSound()
+{
+	canplaySound = true;
 }
 

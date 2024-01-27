@@ -48,8 +48,18 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Stats, meta = (AllowPrivateAccess = true))
 	bool bIsPicketUp;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Sounds, meta = (AllowPrivateAccess = true))
+	class USoundBase* impactSound;
+
 	UPROPERTY()
 	FTimerHandle destroyTimerHandle;
+
+	UPROPERTY()
+	FTimerHandle soundTimerHandle;
+
+	UPROPERTY()
+	bool canplaySound;
+
 
 protected:
 	// Called when the game starts or when spawned
@@ -81,6 +91,10 @@ public:
 
 	UFUNCTION()
 	void DestroySoon();
+
+
+	UFUNCTION()
+	void CanPlayNewSound();
 
 
 };

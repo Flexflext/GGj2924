@@ -13,6 +13,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
 #include "ThrowableObject.h"
+#include "WinConditionManager.h"
 #include "Components/SphereComponent.h"
 #include "Kismet/GameplayStatics.h"
 
@@ -84,6 +85,7 @@ void AProjectWonkyCharacter::BeginPlay()
 
 	world = GetWorld();
 
+	canPlayNewSound = true;
 	throwIndicatorArrow->SetHiddenInGame(true);
 
 	//Add Input Mapping Context
@@ -110,6 +112,19 @@ void AProjectWonkyCharacter::BeginPlay()
 	}
 }
 
+void AProjectWonkyCharacter::Tick(float DeltaSeconds)
+{
+	Super::Tick(DeltaSeconds);
+
+	if (wasfalling && GetCharacterMovement()->IsMovingOnGround())
+	{
+		JumpEnd();
+	}
+
+
+	wasfalling = GetCharacterMovement()->IsFalling();
+}
+
 //////////////////////////////////////////////////////////////////////////
 // Input
 
@@ -119,7 +134,7 @@ void AProjectWonkyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerIn
 	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent)) {
 		
 		// Jumping
-		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ACharacter::Jump);
+		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &AProjectWonkyCharacter::JumpStart);
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
 
 		// Moving
@@ -155,6 +170,34 @@ void AProjectWonkyCharacter::Move(const FInputActionValue& Value)
 
 		// add movement 
 		AddMovementInput(ForwardDirection, MovementVector.Y);
+
+		if (!inAir)
+		{
+			if (GetVelocity().X != 0)
+			{
+				if (canPlayNewSound)
+				{
+
+					canPlayNewSound = false;
+					world->GetTimerManager().SetTimer(
+						playNewSoundTImer,
+						this,
+						&AProjectWonkyCharacter::RegenFootStep,
+						timebetweenFootSteps,
+						false);
+
+
+					USoundBase* Sound = footSteps[FMath::RandRange(0, footSteps.Num() - 1)];
+
+					if (Sound)
+					{
+						UGameplayStatics::PlaySound2D(world, Sound);
+					}
+				}
+			}
+		}
+		
+
 		AddMovementInput(RightDirection, MovementVector.X);
 	}
 }
@@ -177,28 +220,31 @@ void AProjectWonkyCharacter::Attack(const FInputActionValue& Value)
 
 		UE_LOG(LogTemp, Warning, TEXT("Throw"))
 		Throw();
-
-		
-		return;
 	}
-
-	//Play Attack Animation
-	UE_LOG(LogTemp, Warning, TEXT("AttackAnimation"));
-
-	if (canAttackEnemy)
+	else
 	{
+		//Play Attack Animation
+		UE_LOG(LogTemp, Warning, TEXT("AttackAnimation"));
 
-		UE_LOG(LogTemp, Warning, TEXT("Attack"))
-		//Attack Enemy here
-		FVector knockback = FVector(meeleknockbackForce, 0, meeleknockbackForce / 4);
-		if (enemyToAttack->GetActorLocation().X < GetActorLocation().X)
+		UGameplayStatics::PlaySound2D(world, punchSound);
+
+		if (canAttackEnemy)
 		{
-			knockback = FVector(-meeleknockbackForce, 0, meeleknockbackForce / 4);
+
+			UE_LOG(LogTemp, Warning, TEXT("Attack"))
+				//Attack Enemy here
+				FVector knockback = FVector(meeleknockbackForce, 0, meeleknockbackForce / 4);
+			if (enemyToAttack->GetActorLocation().X < GetActorLocation().X)
+			{
+				knockback = FVector(-meeleknockbackForce, 0, meeleknockbackForce / 4);
+			}
+
+
+			enemyToAttack->Enemy_TakeDamage(meeleDamage, knockback);
 		}
-
-
-		enemyToAttack->Enemy_TakeDamage(meeleDamage, knockback);
 	}
+
+	
 
 	
 }
@@ -206,6 +252,8 @@ void AProjectWonkyCharacter::Attack(const FInputActionValue& Value)
 void AProjectWonkyCharacter::Player_TakeDamage(float _damage)
 {
 	playerHealth -= _damage;
+
+	UGameplayStatics::PlaySound2D(world, getdamageSound);
 
 	if (playerHealth <= 0)
 	{
@@ -216,7 +264,13 @@ void AProjectWonkyCharacter::Player_TakeDamage(float _damage)
 
 void AProjectWonkyCharacter::OnPlayerDeath()
 {
-	UE_LOG(LogTemp, Warning, TEXT("PLayer is Dead"));
+	UE_LOG(LogTemp, Warning, TEXT("Player is Dead"));
+
+	if (AWinConditionManager* wcManager = Cast<AWinConditionManager>(UGameplayStatics::GetActorOfClass(world, AWinConditionManager::StaticClass())))
+		wcManager->DeductPlayerLife();
+
+
+
 }
 
 void AProjectWonkyCharacter::PickupObject(const FInputActionValue& Value)
@@ -232,6 +286,9 @@ void AProjectWonkyCharacter::PickupObject(const FInputActionValue& Value)
 	{
 		vectorRotation = 0;
 		throwObject->mesh->SetSimulatePhysics(false);
+
+
+		UGameplayStatics::PlaySound2D(world, pickupSound);
 
 		throwObject->SetActorRotation(holdingPosition->GetRelativeRotation(), ETeleportType::TeleportPhysics);
 
@@ -250,14 +307,39 @@ void AProjectWonkyCharacter::PickupObject(const FInputActionValue& Value)
 	holdingObject = true;
 }
 
+void AProjectWonkyCharacter::JumpStart(const FInputActionValue& Value)
+{
+	Jump();
+	inAir = true;
+
+	UGameplayStatics::PlaySound2D(world, jumpSound);
+}
+
+void AProjectWonkyCharacter::JumpEnd()
+{
+	inAir = false;
+
+	UGameplayStatics::PlaySound2D(world, landSound);
+}
+
 void AProjectWonkyCharacter::RegenAttack()
 {
 	onAttackCooldown = false;
 }
 
+void AProjectWonkyCharacter::RegenFootStep()
+{
+	canPlayNewSound = true;
+}
+
 void AProjectWonkyCharacter::Throw()
 {
+	USoundBase* Sound = throwSounds[FMath::RandRange(0, throwSounds.Num() - 1)];
 
+	if (Sound)
+	{
+		UGameplayStatics::PlaySound2D(world, Sound);
+	}
 	//Throw Object
 		//Play Throw Animation
 
@@ -355,10 +437,9 @@ void AProjectWonkyCharacter::Look(const FInputActionValue& Value)
 
 		if (throwObject != nullptr)
 		{
-			FVector dir = GetActorForwardVector();
 
-			FRotator ror = { vectorRotation,0,0 };
-			FRotator rorIndicator = { vectorRotation - 90,0,0 };
+			FRotator ror = { -vectorRotation,0,0 };
+			FRotator rorIndicator = { -vectorRotation - 90,0,0 };
 			//ror += GetActorRotation();
 			//rorIndicator += GetActorRotation();
 

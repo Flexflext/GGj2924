@@ -67,10 +67,13 @@ class AProjectWonkyCharacter : public ACharacter
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* LookAction;
 
+
+
 public:
 	AProjectWonkyCharacter();
 	
-
+	UFUNCTION()
+	void Player_TakeDamage(float _damage);
 protected:
 
 	/** Called for movement input */
@@ -79,11 +82,13 @@ protected:
 	UFUNCTION()
 	void Attack(const FInputActionValue& Value);
 
-	UFUNCTION()
-	void Player_TakeDamage(float _damage);
+
+	
 
 	UFUNCTION()
 	void OnPlayerDeath();
+
+	
 
 	UFUNCTION()
 	void Look(const FInputActionValue& Value);
@@ -91,8 +96,18 @@ protected:
 	UFUNCTION()
 	void PickupObject(const FInputActionValue& Value);
 
+
+	UFUNCTION()
+	void JumpStart(const FInputActionValue& Value);
+
+	UFUNCTION()
+	void JumpEnd();
+
 	UFUNCTION()
 	void RegenAttack();
+
+	UFUNCTION()
+	void RegenFootStep();
 
 	UFUNCTION()
 	void Throw();
@@ -116,6 +131,9 @@ protected:
 	// To add mapping context
 	virtual void BeginPlay();
 
+
+	virtual void Tick(float DeltaSeconds) override;
+
 protected:
 
 	UPROPERTY()
@@ -133,6 +151,9 @@ protected:
 
 	UPROPERTY()
 	bool canAttackEnemy;
+
+	UPROPERTY()
+	bool inAir;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Combat, meta = (AllowPrivateAccess = true))
 	float attackCooldown;
@@ -160,18 +181,54 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Combat, meta = (AllowPrivateAccess = true))
 	float vectorRotation;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Walking, meta = (AllowPrivateAccess = true))
+	float timebetweenFootSteps = 0.5f;
 
 	UPROPERTY()
 	bool onAttackCooldown;
 
 
-
+	UPROPERTY()
+	bool wasfalling;
 
 	UPROPERTY()
 	FTimerHandle attackCoolDownHandle;
 
 	UPROPERTY()
+	FTimerHandle playNewSoundTImer;
+
+	UPROPERTY()
+	bool canPlayNewSound;
+
+	UPROPERTY()
 	UWorld* world;
+
+
+protected:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Sounds, meta = (AllowPrivateAccess = true))
+	class USoundBase* getdamageSound;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Sounds, meta = (AllowPrivateAccess = true))
+	class USoundBase* punchSound;
+
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Sounds, meta = (AllowPrivateAccess = true))
+	class USoundBase* pickupSound;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Sounds, meta = (AllowPrivateAccess = true))
+	class USoundBase* landSound;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Sounds, meta = (AllowPrivateAccess = true))
+	class USoundBase* jumpSound;
+
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Sounds, meta = (AllowPrivateAccess = true))
+	TArray<class USoundBase*> throwSounds;
+
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Sounds, meta = (AllowPrivateAccess = true))
+	TArray<class USoundBase*> footSteps;
+
 
 
 public:
@@ -180,7 +237,8 @@ public:
 	/** Returns FollowCamera subobject **/
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 
-
+	FORCEINLINE
+	float GetPlayerHealth() { return playerHealth; }
 
 };
 
