@@ -3,11 +3,12 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/Pawn.h"
+#include "EnumLibrary.h"
+#include "GameFramework/Character.h"
 #include "EnemyBase.generated.h"
 
 UCLASS()
-class PROJECTWONKY_API AEnemyBase : public APawn
+class PROJECTWONKY_API AEnemyBase : public ACharacter
 {
 	GENERATED_BODY()
 
@@ -43,11 +44,15 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly,Category = EnemyStatus, meta = (AllowPrivateAccess))
 	bool bHasDied;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly,Category = EnemyStats, meta = (AllowPrivateAccess))
-	float attackRange;
-
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = EnemyStats, meta = (AllowPrivateAccess))
 	class USphereComponent* attackBox;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = EnemyStats, meta = (AllowPrivateAccess))
+	USphereComponent* aggroBox;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = EnemyStats, meta = (AllowPrivateAccess))
+	UStaticMeshComponent* enemyMesh;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = EnemyStats, meta = (AllowPrivateAccess))
+	UStaticMeshComponent* enemyMeshh;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = EnemyStats, meta = (AllowPrivateAccess))
 	class UCapsuleComponent* enemyHitbox;
@@ -69,17 +74,31 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = EnemyStats, meta = (AllowPrivateAccess))
 	float attackKnockback;
 
-	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = EnemyStats, meta = (AllowPrivateAccess))
-
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = EnemyStats, meta = (AllowPrivateAccess))
+	EEnemyStates currentState;
 
 	UPROPERTY()
 	UWorld* world;
+
+	UPROPERTY()
+	FVector startPos;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = EnemyStats, meta = (AllowPrivateAccess))
+	float MovementSpeed;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = EnemyStats, meta = (AllowPrivateAccess))
+	class AAIController* aiController;
 
 private:
 	UFUNCTION()
 	virtual void AttackRange_BeginOverlap(UPrimitiveComponent* _overlappedComponent, AActor* _otherActor, UPrimitiveComponent* _otherComp, int32 _otherBodyIndex, bool _bFromSweep, const FHitResult& _sweepResult);
 	UFUNCTION()
 	virtual void AttackRange_EndOverlap(UPrimitiveComponent* _overlappedComponent, AActor* _otherActor, UPrimitiveComponent* _otherComp, int32 _otherBodyIndex);
+
+	UFUNCTION()
+	virtual void AggroRange_BeginOverlap(UPrimitiveComponent* _overlappedComponent, AActor* _otherActor, UPrimitiveComponent* _otherComp, int32 _otherBodyIndex, bool _bFromSweep, const FHitResult& _sweepResult);
+	UFUNCTION()
+	virtual void AggroRange_EndOverlap(UPrimitiveComponent* _overlappedComponent, AActor* _otherActor, UPrimitiveComponent* _otherComp, int32 _otherBodyIndex);
 
 	UFUNCTION()
 	void OnEnemyDeath();
@@ -93,5 +112,14 @@ private:
 	UFUNCTION()
 	void CommitAttack();
 
+	UFUNCTION()
+	void SetCurrentState(EEnemyStates _newState);
 
+	UFUNCTION()
+	void State_MoveToTarget();
+
+	UFUNCTION()
+	void State_Idle();
+	UFUNCTION()
+	void State_AttackCache();
 };
