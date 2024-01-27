@@ -229,6 +229,17 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Sounds, meta = (AllowPrivateAccess = true))
 	TArray<class USoundBase*> footSteps;
 
+protected:
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Animations, meta = (AllowPrivateAccess = true))
+	class UAnimMontage* attackAnimMontage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Animations, meta = (AllowPrivateAccess = true))
+	class UAnimMontage* pickupAnimation;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Animations, meta = (AllowPrivateAccess = true))
+	class UAnimMontage* throwAnimation;
+
 
 
 public:
