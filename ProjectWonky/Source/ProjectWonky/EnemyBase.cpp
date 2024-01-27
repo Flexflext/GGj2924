@@ -3,12 +3,13 @@
 
 #include "EnemyBase.h"
 
-#include "ProjectWonkyCharacter.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/SphereComponent.h"
+#include "NiagaraComponent.h"
 #include "GameFramework/PawnMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMaterialLibrary.h"
+#include "ProjectWonkyCharacter.h"
 #include "Runtime/AIModule/Classes/AIController.h"
 
 // Sets default values
@@ -28,6 +29,11 @@ AEnemyBase::AEnemyBase()
 	yDefault = 1000.f;
 
 	materialDefaultValue = -1.f;
+
+	attackCooldown = 0.4f;
+
+	niagaraComp = CreateDefaultSubobject<UNiagaraComponent>("Niagara");
+	niagaraComp->SetupAttachment(GetRootComponent());
 }
 
 // Called when the game starts or when spawned
@@ -47,6 +53,8 @@ void AEnemyBase::BeginPlay()
 	currentHealth = enemyMaxHealth;
 
 	startPos = GetActorLocation();
+
+	PlayRandomExpression();
 }
 
 // Called every frame
@@ -57,14 +65,16 @@ void AEnemyBase::Tick(float DeltaTime)
 	if (bHasDied)
 	{
 		FadeMaterial(DeltaTime);
+		TickRagdoll(DeltaTime);
 		return;
 	}
+
 
 	switch (currentState)
 	{
 		// Ich nutze Attack erstmal nur als empty weil ich return über idle regeln will und attack eh über den timer om overlap
 	case EEnemyStates::ES_Attack:
-		State_AttackCache();
+		TickAttack(DeltaTime);
 		break;
 		// Idle soll die AI halt auch zu ihrer start pos zurück gehen lassen
 	case EEnemyStates::ES_Idle:
@@ -82,6 +92,11 @@ void AEnemyBase::Tick(float DeltaTime)
 		default:
 		break;
 	}
+
+	if (GetVelocity().Length() <= 0)
+		bIsMoving = false;
+	else
+		bIsMoving = true;
 }
 
 // Called to bind functionality to input
@@ -104,9 +119,9 @@ void AEnemyBase::AttackRange_BeginOverlap(UPrimitiveComponent* _overlappedCompon
 
 	if (AProjectWonkyCharacter* player = Cast<AProjectWonkyCharacter>(_otherActor))
 	{
-		SetCurrentState(EEnemyStates::ES_Attack);
+		bcanAttackPlayer = true;
 
-		world->GetTimerManager().SetTimer(cooldownTimerHandle, this, &AEnemyBase::CommitAttack, attackCooldown);
+		SetCurrentState(EEnemyStates::ES_Attack);
 
 		aiController->StopMovement();
 	}
@@ -124,17 +139,11 @@ void AEnemyBase::AttackRange_EndOverlap(UPrimitiveComponent* _overlappedComponen
 	// Wenn der Player aus der attack range raus is soll der enemy nach ablauf des timer, bestimmt durch seinen attack cooldown, den spieler verfolgen
 	if (AProjectWonkyCharacter* player = Cast<AProjectWonkyCharacter>(_otherActor))
 	{
+		bcanAttackPlayer = false;
+
 		EEnemyStates newstate = EEnemyStates::ES_MoveToTarget;
 
-		auto waitlambda = [this, newstate]()
-		{
-			SetCurrentState(newstate);
-		};
-		
-		FTimerDelegate timerdele;
-		timerdele.BindLambda(waitlambda);
-
-		world->GetTimerManager().SetTimer(cooldownTimerHandle, timerdele, attackCooldown, false);
+		SetCurrentState(newstate);
 	}
 }
 
@@ -170,14 +179,13 @@ void AEnemyBase::AggroRange_EndOverlap(UPrimitiveComponent* _overlappedComponent
 void AEnemyBase::OnEnemyDeath(FVector _knockback)
 {
 	bHasDied = true;
+
 	aiController->StopMovement();
 
 	GetMesh()->SetSimulatePhysics(true);
-	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
+	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 	GetMesh()->AddForce(_knockback);
-
-	world->GetTimerManager().SetTimer(ragdollTimerHandle, this, &AEnemyBase::CleanEnemyDeath, ragdolltimer);
 }
 
 void AEnemyBase::CleanEnemyDeath()
@@ -190,28 +198,24 @@ void AEnemyBase::Enemy_TakeDamage(float _damage, FVector _knockback)
 	// Apply Velo here, die gegner sollen auch velo erhalten können wenn sie tot sind 
 	aiController->StopMovement();
 
-	GetMesh()->SetSimulatePhysics(true);
-
 	UGameplayStatics::SetGlobalTimeDilation(world, 0.45);
 	FTimerHandle handle;
-	world->GetTimerManager().SetTimer(handle, this, &AEnemyBase::State_AttackCache, .1f, false);
+	world->GetTimerManager().SetTimer(handle, this, &AEnemyBase::ResetGlobalTimeDilation, .1f, false);
 
+	if(takeDamage_SFX)
+		UGameplayStatics::PlaySound2D(world, takeDamage_SFX);
 
-	if(currentHealth - _damage <= 0)
-	{
+	currentHealth -= _damage;
+
+	SetCurrentState(EEnemyStates::ES_Staggered);
+
+	if (currentHealth <= 0)
 		OnEnemyDeath(_knockback);
-	}
-	else
-	{
-
-		SetCurrentState(EEnemyStates::ES_Staggered);
-		currentHealth -= _damage;
-	}
 }
 
 void AEnemyBase::CommitAttack()
 {
-	if (!targetPlayer || bHasDied)
+	if (!targetPlayer || bHasDied || !bcanAttackPlayer )
 		return;
 
 	// Noch schauen das ich das von der rotatrion abhängig mache
@@ -219,8 +223,14 @@ void AEnemyBase::CommitAttack()
 
 	targetPlayer->LaunchCharacter(launchvelo, true,true);
 
-	// Give Damage to players
+	niagaraComp->ActivateSystem();
+
 	targetPlayer->Player_TakeDamage(enemyDamage);
+}
+
+void AEnemyBase::ResetGlobalTimeDilation()
+{
+	UGameplayStatics::SetGlobalTimeDilation(world, 1);
 }
 
 void AEnemyBase::SetCurrentState(EEnemyStates _newState)
@@ -240,7 +250,9 @@ void AEnemyBase::SetCurrentState(EEnemyStates _newState)
 	FTimerDelegate timerdele;
 	timerdele.BindLambda(waitlambda);
 
-	world->GetTimerManager().SetTimer(ragdollTimerHandle, timerdele, ragdolltimer, false);
+	FTimerHandle handle;
+
+	world->GetTimerManager().SetTimer(handle, timerdele, currentRagdolltimer, false);
 }
 
 void AEnemyBase::State_MoveToTarget()
@@ -266,13 +278,6 @@ void AEnemyBase::State_Idle()
 	aiController->MoveToLocation(startPos);
 }
 
-void AEnemyBase::State_AttackCache()
-{
-	UGameplayStatics::SetGlobalTimeDilation(world, 1);
-
-	// Do Jack Shit
-}
-
 void AEnemyBase::State_Staggered()
 {
 	aiController->StopMovement();
@@ -286,4 +291,38 @@ void AEnemyBase::ResetStaggered()
 		SetCurrentState(EEnemyStates::ES_MoveToTarget);
 	else
 		SetCurrentState(EEnemyStates::ES_Idle);
+}
+
+void AEnemyBase::PlayRandomExpression()
+{
+	if (bHasDied)
+		return;
+
+	int rnd = FMath::RandRange(0, expressionSounds.Num() - 1);
+	UGameplayStatics::PlaySound2D(world, expressionSounds[rnd]);
+
+	FTimerHandle handle;
+
+	world->GetTimerManager().SetTimer(handle, this, &AEnemyBase::PlayRandomExpression, 5.f,false);
+}
+
+void AEnemyBase::TickAttack(float _dt)
+{
+	if (attackCooldown <= 0)
+	{
+		attackCooldown = maxAttackCooldown;
+		CommitAttack();
+	}
+	else
+		attackCooldown -= _dt;
+}
+
+void AEnemyBase::TickRagdoll(float _dt)
+{
+	if (currentRagdolltimer <= 0)
+	{
+		CleanEnemyDeath();
+	}
+	else
+		currentRagdolltimer -= _dt;
 }

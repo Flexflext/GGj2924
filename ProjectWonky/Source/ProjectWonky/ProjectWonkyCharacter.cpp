@@ -2,6 +2,7 @@
 
 #include "ProjectWonkyCharacter.h"
 
+#include "Destructibles.h"
 #include "EnemyBase.h"
 #include "Engine/LocalPlayer.h"
 #include "Camera/CameraComponent.h"
@@ -76,6 +77,9 @@ AProjectWonkyCharacter::AProjectWonkyCharacter()
 	throwIndicatorArrow->SetupAttachment(arrowPosition);
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
+
+
+	playerHealth = playerMaxHealth;
 }
 
 void AProjectWonkyCharacter::BeginPlay()
@@ -257,7 +261,7 @@ void AProjectWonkyCharacter::Player_TakeDamage(float _damage)
 	if (playerHealth <= 0)
 	{
 		OnPlayerDeath();
-		playerHealth = 0;
+		playerHealth = playerMaxHealth;
 	}
 }
 
@@ -382,6 +386,9 @@ void AProjectWonkyCharacter::DelayedAttack()
 
 		enemyToAttack->Enemy_TakeDamage(meeleDamage, knockback);
 	}
+
+	if (currDestructible)
+		currDestructible->Destructible_TakeDamage(meeleDamage);
 }
 
 void AProjectWonkyCharacter::AttackRange_EndOverlap(UPrimitiveComponent* _overlappedComponent, AActor* _otherActor,
@@ -406,6 +413,11 @@ void AProjectWonkyCharacter::AttackRange_BeginOverlap(UPrimitiveComponent* _over
 			canAttackEnemy = true;
 		}
 		
+	}
+
+	if (ADestructibles* destructibles = Cast<ADestructibles>(_otherActor))
+	{
+		currDestructible = destructibles;
 	}
 
 }

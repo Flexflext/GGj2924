@@ -54,16 +54,20 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = EnemyStatus, meta = (AllowPrivateAccess))
 	class AProjectWonkyCharacter* targetPlayer;
 
-	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category=EnemyStatus, meta = (AllowPrivateAccess))
-	FTimerHandle cooldownTimerHandle;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = EnemyStats, meta = (AllowPrivateAccess))
+	USoundBase* takeDamage_SFX;
 
-	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category=EnemyStatus, meta = (AllowPrivateAccess))
-	FTimerHandle ragdollTimerHandle;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = EnemyStats, meta = (AllowPrivateAccess))
+	TArray<USoundBase*> expressionSounds;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = EnemyStats, meta = (AllowPrivateAccess))
+	class UNiagaraComponent* niagaraComp;
 
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category= EnemyStats , meta=(AllowPrivateAccess))
-	float attackCooldown;
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category= EnemyStats , meta=(AllowPrivateAccess))
-	float ragdolltimer;
+	float currentRagdolltimer;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = EnemyStats, meta = (AllowPrivateAccess))
+	bool bActivateRagdoll;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = EnemyStats, meta = (AllowPrivateAccess))
 	float attackKnockback;
@@ -92,7 +96,13 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = EnemyStats, meta = (AllowPrivateAccess))
 	float materialDefaultValue;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = EnemyStats, meta = (AllowPrivateAccess))
+	bool bIsMoving;
+
 private:
+	UPROPERTY()
+	bool bcanAttackPlayer;
+
 	UFUNCTION()
 	virtual void AttackRange_BeginOverlap(UPrimitiveComponent* _overlappedComponent, AActor* _otherActor, UPrimitiveComponent* _otherComp, int32 _otherBodyIndex, bool _bFromSweep, const FHitResult& _sweepResult);
 	UFUNCTION()
@@ -111,6 +121,8 @@ private:
 
 	UFUNCTION()
 	void CommitAttack();
+	UFUNCTION()
+	void ResetGlobalTimeDilation();
 
 	UFUNCTION()
 	void SetCurrentState(EEnemyStates _newState);
@@ -121,13 +133,27 @@ private:
 	UFUNCTION()
 	void State_Idle();
 	UFUNCTION()
-	void State_AttackCache();
-	UFUNCTION()
 	void State_Staggered();
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = EnemyStats, meta = (AllowPrivateAccess))
+	float attackCooldown;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = EnemyStats, meta = (AllowPrivateAccess))
+	float maxAttackCooldown;
 
 	UFUNCTION()
 	void ResetStaggered();
+	UFUNCTION()
+	void PlayRandomExpression();
+
+	UFUNCTION()
+	void TickAttack(float _dt);
+	UFUNCTION()
+	void TickRagdoll(float _dt);
+
 public:
 	UFUNCTION()
 		void Enemy_TakeDamage(float _damage, FVector _knockback);
+
+	UFUNCTION(BlueprintCallable) FORCEINLINE
+	bool GetIsMoving() { return bIsMoving; }
 };
