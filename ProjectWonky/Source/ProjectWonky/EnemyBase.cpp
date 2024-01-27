@@ -3,12 +3,13 @@
 
 #include "EnemyBase.h"
 
-#include "ProjectWonkyCharacter.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/SphereComponent.h"
+#include "NiagaraComponent.h"
 #include "GameFramework/PawnMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMaterialLibrary.h"
+#include "ProjectWonkyCharacter.h"
 #include "Runtime/AIModule/Classes/AIController.h"
 
 // Sets default values
@@ -30,6 +31,9 @@ AEnemyBase::AEnemyBase()
 	materialDefaultValue = -1.f;
 
 	attackCooldown = 0.4f;
+
+	niagaraComp = CreateDefaultSubobject<UNiagaraComponent>("Niagara");
+	niagaraComp->SetupAttachment(GetRootComponent());
 }
 
 // Called when the game starts or when spawned
@@ -223,7 +227,8 @@ void AEnemyBase::CommitAttack()
 
 	targetPlayer->LaunchCharacter(launchvelo, true,true);
 
-	// Give Damage to players
+	niagaraComp->ActivateSystem();
+
 	targetPlayer->Player_TakeDamage(enemyDamage);
 }
 

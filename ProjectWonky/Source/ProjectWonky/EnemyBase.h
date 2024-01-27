@@ -63,6 +63,8 @@ private:
 	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category=EnemyStatus, meta = (AllowPrivateAccess))
 	FTimerHandle ragdollTimerHandle;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = EnemyStats, meta = (AllowPrivateAccess))
+	class UNiagaraComponent* niagaraComp;
 
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category= EnemyStats , meta=(AllowPrivateAccess))
 	float ragdolltimer;

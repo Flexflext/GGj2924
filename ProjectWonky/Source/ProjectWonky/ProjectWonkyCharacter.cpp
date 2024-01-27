@@ -76,6 +76,9 @@ AProjectWonkyCharacter::AProjectWonkyCharacter()
 	throwIndicatorArrow->SetupAttachment(arrowPosition);
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
+
+
+	playerHealth = playerMaxHealth;
 }
 
 void AProjectWonkyCharacter::BeginPlay()
@@ -257,7 +260,7 @@ void AProjectWonkyCharacter::Player_TakeDamage(float _damage)
 	if (playerHealth <= 0)
 	{
 		OnPlayerDeath();
-		playerHealth = 0;
+		playerHealth = playerMaxHealth;
 	}
 }
 
