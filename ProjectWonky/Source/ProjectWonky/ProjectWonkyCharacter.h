@@ -113,6 +113,9 @@ protected:
 	void Throw();
 
 	UFUNCTION()
+	void DelayedAttack();
+
+	UFUNCTION()
 	virtual void AttackRange_EndOverlap(UPrimitiveComponent* _overlappedComponent, AActor* _otherActor, UPrimitiveComponent* _otherComp, int32 _otherBodyIndex);
 	UFUNCTION()
 	virtual void AttackRange_BeginOverlap(UPrimitiveComponent* _overlappedComponent, AActor* _otherActor, UPrimitiveComponent* _otherComp, int32 _otherBodyIndex, bool _bFromSweep, const FHitResult& _sweepResult);
@@ -184,6 +187,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Walking, meta = (AllowPrivateAccess = true))
 	float timebetweenFootSteps = 0.5f;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Combat, meta = (AllowPrivateAccess = true))
+	float timeDelayforPunch = 0.5f;
+
 	UPROPERTY()
 	bool onAttackCooldown;
 
@@ -196,6 +202,9 @@ protected:
 
 	UPROPERTY()
 	FTimerHandle playNewSoundTImer;
+
+	UPROPERTY()
+	FTimerHandle attackDelayTimer;
 
 	UPROPERTY()
 	bool canPlayNewSound;
