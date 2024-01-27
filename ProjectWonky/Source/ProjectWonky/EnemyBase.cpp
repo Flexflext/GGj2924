@@ -7,6 +7,7 @@
 #include "Components/CapsuleComponent.h"
 #include "Components/SphereComponent.h"
 #include "GameFramework/PawnMovementComponent.h"
+#include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMaterialLibrary.h"
 #include "Runtime/AIModule/Classes/AIController.h"
 
@@ -189,8 +190,12 @@ void AEnemyBase::Enemy_TakeDamage(float _damage, FVector _knockback)
 	// Apply Velo here, die gegner sollen auch velo erhalten können wenn sie tot sind 
 	aiController->StopMovement();
 
-
 	GetMesh()->SetSimulatePhysics(true);
+
+	UGameplayStatics::SetGlobalTimeDilation(world, 0.45);
+	FTimerHandle handle;
+	world->GetTimerManager().SetTimer(handle, this, &AEnemyBase::State_AttackCache, .1f, false);
+
 
 	if(currentHealth - _damage <= 0)
 	{
@@ -198,6 +203,7 @@ void AEnemyBase::Enemy_TakeDamage(float _damage, FVector _knockback)
 	}
 	else
 	{
+
 		SetCurrentState(EEnemyStates::ES_Staggered);
 		currentHealth -= _damage;
 	}
@@ -262,6 +268,8 @@ void AEnemyBase::State_Idle()
 
 void AEnemyBase::State_AttackCache()
 {
+	UGameplayStatics::SetGlobalTimeDilation(world, 1);
+
 	// Do Jack Shit
 }
 
