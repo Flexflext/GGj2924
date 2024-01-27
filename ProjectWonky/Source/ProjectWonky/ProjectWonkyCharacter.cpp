@@ -13,6 +13,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
 #include "ThrowableObject.h"
+#include "WinConditionManager.h"
 #include "Components/SphereComponent.h"
 #include "Kismet/GameplayStatics.h"
 
@@ -217,6 +218,12 @@ void AProjectWonkyCharacter::Player_TakeDamage(float _damage)
 void AProjectWonkyCharacter::OnPlayerDeath()
 {
 	UE_LOG(LogTemp, Warning, TEXT("PLayer is Dead"));
+
+	if (AWinConditionManager* wcManager = Cast<AWinConditionManager>(UGameplayStatics::GetActorOfClass(world, AWinConditionManager::StaticClass())))
+		wcManager->DeductPlayerLife();
+
+
+
 }
 
 void AProjectWonkyCharacter::PickupObject(const FInputActionValue& Value)
