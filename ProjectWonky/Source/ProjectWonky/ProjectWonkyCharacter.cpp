@@ -2,6 +2,7 @@
 
 #include "ProjectWonkyCharacter.h"
 
+#include "Destructibles.h"
 #include "EnemyBase.h"
 #include "Engine/LocalPlayer.h"
 #include "Camera/CameraComponent.h"
@@ -385,6 +386,9 @@ void AProjectWonkyCharacter::DelayedAttack()
 
 		enemyToAttack->Enemy_TakeDamage(meeleDamage, knockback);
 	}
+
+	if (currDestructible)
+		currDestructible->Destructible_TakeDamage(meeleDamage);
 }
 
 void AProjectWonkyCharacter::AttackRange_EndOverlap(UPrimitiveComponent* _overlappedComponent, AActor* _otherActor,
@@ -409,6 +413,11 @@ void AProjectWonkyCharacter::AttackRange_BeginOverlap(UPrimitiveComponent* _over
 			canAttackEnemy = true;
 		}
 		
+	}
+
+	if (ADestructibles* destructibles = Cast<ADestructibles>(_otherActor))
+	{
+		currDestructible = destructibles;
 	}
 
 }

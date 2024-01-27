@@ -60,14 +60,14 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = EnemyStats, meta = (AllowPrivateAccess))
 	TArray<USoundBase*> expressionSounds;
 
-	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category=EnemyStatus, meta = (AllowPrivateAccess))
-	FTimerHandle ragdollTimerHandle;
-
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = EnemyStats, meta = (AllowPrivateAccess))
 	class UNiagaraComponent* niagaraComp;
 
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category= EnemyStats , meta=(AllowPrivateAccess))
-	float ragdolltimer;
+	float currentRagdolltimer;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = EnemyStats, meta = (AllowPrivateAccess))
+	bool bActivateRagdoll;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = EnemyStats, meta = (AllowPrivateAccess))
 	float attackKnockback;
@@ -147,6 +147,8 @@ private:
 
 	UFUNCTION()
 	void TickAttack(float _dt);
+	UFUNCTION()
+	void TickRagdoll(float _dt);
 
 public:
 	UFUNCTION()

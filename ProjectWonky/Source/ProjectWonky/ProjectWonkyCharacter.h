@@ -148,6 +148,8 @@ protected:
 
 	UPROPERTY()
 	class AEnemyBase* enemyToAttack;
+	UPROPERTY()
+	class ADestructibles* currDestructible;
 
 	UPROPERTY()
 	bool holdingObject;
