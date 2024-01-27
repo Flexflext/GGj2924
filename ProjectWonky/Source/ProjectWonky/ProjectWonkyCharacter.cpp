@@ -1,6 +1,8 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "ProjectWonkyCharacter.h"
+
+#include "EnemyBase.h"
 #include "Engine/LocalPlayer.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -65,6 +67,12 @@ AProjectWonkyCharacter::AProjectWonkyCharacter()
 
 	holdingPosition = CreateDefaultSubobject<USceneComponent>(TEXT("HoldingPosition"));
 	holdingPosition->SetupAttachment(RootComponent);
+
+	arrowPosition = CreateDefaultSubobject<USceneComponent>(TEXT("ArrowPosition"));
+	arrowPosition->SetupAttachment(holdingPosition);
+
+	throwIndicatorArrow = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ThrowIndiArrow"));
+	throwIndicatorArrow->SetupAttachment(arrowPosition);
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
 }
@@ -75,6 +83,8 @@ void AProjectWonkyCharacter::BeginPlay()
 	Super::BeginPlay();
 
 	world = GetWorld();
+
+	throwIndicatorArrow->SetHiddenInGame(true);
 
 	//Add Input Mapping Context
 	if (APlayerController* PlayerController = Cast<APlayerController>(Controller))
@@ -177,7 +187,17 @@ void AProjectWonkyCharacter::Attack(const FInputActionValue& Value)
 
 	if (canAttackEnemy)
 	{
+
+		UE_LOG(LogTemp, Warning, TEXT("Attack"))
 		//Attack Enemy here
+		FVector knockback = FVector(meeleknockbackForce, 0, meeleknockbackForce / 4);
+		if (enemyToAttack->GetActorLocation().X < GetActorLocation().X)
+		{
+			knockback = FVector(-meeleknockbackForce, 0, meeleknockbackForce / 4);
+		}
+
+
+		enemyToAttack->Enemy_TakeDamage(meeleDamage, knockback);
 	}
 
 	
@@ -185,6 +205,18 @@ void AProjectWonkyCharacter::Attack(const FInputActionValue& Value)
 
 void AProjectWonkyCharacter::Player_TakeDamage(float _damage)
 {
+	playerHealth -= _damage;
+
+	if (playerHealth <= 0)
+	{
+		OnPlayerDeath();
+		playerHealth = 0;
+	}
+}
+
+void AProjectWonkyCharacter::OnPlayerDeath()
+{
+	UE_LOG(LogTemp, Warning, TEXT("PLayer is Dead"));
 }
 
 void AProjectWonkyCharacter::PickupObject(const FInputActionValue& Value)
@@ -204,9 +236,15 @@ void AProjectWonkyCharacter::PickupObject(const FInputActionValue& Value)
 		throwObject->SetActorRotation(holdingPosition->GetRelativeRotation(), ETeleportType::TeleportPhysics);
 
 		throwObject->AttachToComponent(holdingPosition, FAttachmentTransformRules::KeepRelativeTransform);
+
+
 		throwObject->SetActorLocation(holdingPosition->GetComponentLocation() - throwObject->GetHoldingPosition());
+		arrowPosition->SetWorldLocation(holdingPosition->GetComponentLocation() - throwObject->GetHoldingPosition());
+		throwIndicatorArrow->SetRelativeLocation(throwObject->GetArrowPosition()->GetRelativeLocation());
 
 		throwObject->SetItemPickStatus(true);
+
+		throwIndicatorArrow->SetHiddenInGame(false);
 	}
 
 	holdingObject = true;
@@ -227,18 +265,13 @@ void AProjectWonkyCharacter::Throw()
 
 
 	throwObject->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+	throwIndicatorArrow->SetHiddenInGame(true);
+
 	throwObject->mesh->SetSimulatePhysics(true);
-
-
-	FVector dir = GetActorForwardVector();
-
-	FRotator ror = { vectorRotation,0,0 };
-
-	dir = ror.RotateVector(dir);
 
 	throwObject->SetItemPickStatus(false);
 
-	throwObject->mesh->AddForce(dir * throwforce, NAME_None, true);
+	throwObject->mesh->AddForce(throwObject->mesh->GetForwardVector() * throwforce, NAME_None, true);
 
 
 
@@ -250,18 +283,25 @@ void AProjectWonkyCharacter::Throw()
 void AProjectWonkyCharacter::AttackRange_EndOverlap(UPrimitiveComponent* _overlappedComponent, AActor* _otherActor,
                                                     UPrimitiveComponent* _otherComp, int32 _otherBodyIndex)
 {
-	if (_otherActor->Tags.Contains(FName("Enemy")))
+	if (_otherComp->ComponentHasTag(FName("Enemy")))
 	{
 		canAttackEnemy = false;
+		enemyToAttack = nullptr;
 	}
 }
 
 void AProjectWonkyCharacter::AttackRange_BeginOverlap(UPrimitiveComponent* _overlappedComponent, AActor* _otherActor,
 	UPrimitiveComponent* _otherComp, int32 _otherBodyIndex, bool _bFromSweep, const FHitResult& _sweepResult)
 {
-	if (_otherActor->Tags.Contains(FName("Enemy")))
+	if (_otherComp->ComponentHasTag(FName("Enemy")))
 	{
-		canAttackEnemy = true;
+		enemyToAttack = Cast<AEnemyBase>(_otherActor);
+
+		if (enemyToAttack)
+		{
+			canAttackEnemy = true;
+		}
+		
 	}
 
 }
@@ -272,6 +312,7 @@ void AProjectWonkyCharacter::PickUpRange_EndOverlap(UPrimitiveComponent* _overla
 	if (objectInRange != nullptr)
 	{
 		objectInRange = nullptr;
+
 		//UE_LOG(LogTemp, Warning, TEXT("PickUpOutRange"))
 	}
 }
@@ -279,10 +320,10 @@ void AProjectWonkyCharacter::PickUpRange_EndOverlap(UPrimitiveComponent* _overla
 void AProjectWonkyCharacter::PickUpRange_BeginOverlap(UPrimitiveComponent* _overlappedComponent, AActor* _otherActor,
 	UPrimitiveComponent* _otherComp, int32 _otherBodyIndex, bool _bFromSweep, const FHitResult& _sweepResult)
 {
-	if (_otherActor->ActorHasTag(FName("Throwable")))
+	if (_otherComp->ComponentHasTag(FName("Throwable")))
 	{
 		objectInRange = Cast<AThrowableObject>(_otherActor);
-
+		
 		//UE_LOG(LogTemp, Warning, TEXT("PickUpInRange"))
 
 		if (objectInRange == nullptr)
@@ -317,9 +358,13 @@ void AProjectWonkyCharacter::Look(const FInputActionValue& Value)
 			FVector dir = GetActorForwardVector();
 
 			FRotator ror = { vectorRotation,0,0 };
+			FRotator rorIndicator = { vectorRotation - 90,0,0 };
+			//ror += GetActorRotation();
+			//rorIndicator += GetActorRotation();
 
 			//dir = ror.RotateVector(dir);
-			throwObject->SetActorRotation(ror, ETeleportType::TeleportPhysics);
+			throwObject->SetActorRelativeRotation(ror); //, ETeleportType::TeleportPhysics);
+			arrowPosition->SetRelativeRotation(rorIndicator);// , ETeleportType::TeleportPhysics);
 		}
 
 	}	

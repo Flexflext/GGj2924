@@ -26,16 +26,30 @@ public:
 	class USceneComponent* holdingPosition;
 
 
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Comps, meta = (AllowPrivateAccess = "true"))
+	class USceneComponent* arrowPosition;
+
+
 private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Stats, meta = (AllowPrivateAccess = true))
 	float knockbackForce;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Stats, meta = (AllowPrivateAccess = true))
 	float damage;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Stats, meta = (AllowPrivateAccess = true))
+	float damageVelocity;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Stats, meta = (AllowPrivateAccess = true))
+	int uses;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Stats, meta = (AllowPrivateAccess = true))
 	bool bIsUsed;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Stats, meta = (AllowPrivateAccess = true))
 	bool bIsPicketUp;
+
+	UPROPERTY()
+	FTimerHandle destroyTimerHandle;
 
 protected:
 	// Called when the game starts or when spawned
@@ -60,5 +74,13 @@ public:
 
 	UFUNCTION()
 	FVector GetHoldingPosition();
+
+	UFUNCTION()
+	USceneComponent* GetArrowPosition();
+
+
+	UFUNCTION()
+	void DestroySoon();
+
 
 };

@@ -9,5 +9,6 @@ enum class EEnemyStates : uint8
 	ES_Attack,
 	ES_Idle,
 	ES_MoveToTarget,
+	ES_Staggered,
 	ES_ENTRY_AMOUNT
 };

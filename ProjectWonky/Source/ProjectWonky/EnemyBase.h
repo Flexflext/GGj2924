@@ -67,6 +67,9 @@ private:
 	float attackKnockback;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = EnemyStats, meta = (AllowPrivateAccess))
+	bool bIsStaggered;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = EnemyStats, meta = (AllowPrivateAccess))
 	EEnemyStates currentState;
 
 	UPROPERTY()
@@ -111,6 +114,11 @@ private:
 	void State_Idle();
 	UFUNCTION()
 	void State_AttackCache();
+	UFUNCTION()
+	void State_Staggered();
+
+	UFUNCTION()
+	void ResetStaggered();
 
 public:
 	UFUNCTION()

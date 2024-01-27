@@ -3,6 +3,7 @@
 
 #include "ThrowableObject.h"
 
+#include "Destructibles.h"
 #include "Components/BoxComponent.h"
 #include "ProjectWonky/EnemyBase.h"
 
@@ -19,6 +20,9 @@ AThrowableObject::AThrowableObject()
 	holdingPosition = CreateDefaultSubobject<USceneComponent>(TEXT("HoldingPosition"));
 	holdingPosition->SetupAttachment(RootComponent);
 
+	arrowPosition = CreateDefaultSubobject<USceneComponent>(TEXT("ArrowPosition"));
+	arrowPosition->SetupAttachment(RootComponent);
+
 	hitBox = CreateDefaultSubobject<UBoxComponent>(TEXT("HitBox"));
 	hitBox->SetupAttachment(mesh);
 	
@@ -31,6 +35,7 @@ void AThrowableObject::BeginPlay()
 	Super::BeginPlay();
 
 	this->Tags.AddUnique(FName("Throwable"));
+	mesh->ComponentTags.AddUnique(FName("Throwable"));
 
 	hitBox->OnComponentBeginOverlap.AddDynamic(this, &AThrowableObject::Hit_BeginOverlap);
 
@@ -42,14 +47,37 @@ void AThrowableObject::Hit_BeginOverlap(UPrimitiveComponent* _overlappedComponen
 	if (!bIsUsed)
 		return;
 
+	if (ADestructibles* destuctable = Cast<ADestructibles>(_otherActor))
+	{
+		destuctable->Destructible_TakeDamage(damage);
+	}
+
 	if (_otherComp->ComponentHasTag("Enemy"))
 	{
 		AEnemyBase* enemy = Cast<AEnemyBase>(_otherActor);
-		FVector knockback = FVector(knockbackForce,0, knockbackForce);
+
+		FVector knockback = FVector(knockbackForce, 0, knockbackForce / 4);
+		if (enemy->GetActorLocation().X < GetActorLocation().X)
+		{
+			knockback = FVector(-knockbackForce, 0, knockbackForce / 4);
+		}
+		
+		
 
 		enemy->Enemy_TakeDamage(damage, knockback);
 
-		this->Destroy();
+		uses--;
+		if (uses <= 0)
+		{
+			GetWorld()->GetTimerManager().SetTimer(
+				destroyTimerHandle,
+				this,
+				&AThrowableObject::DestroySoon,
+				0.01f,
+				false);
+
+			
+		}
 		// Hier Animations oder so mit renne
 	}
 }
@@ -70,16 +98,26 @@ void AThrowableObject::Tick(float DeltaTime)
 
 void AThrowableObject::TickUsedStatus()
 {
-	if (GetVelocity().Length() <= 0)
+	if (GetVelocity().Length() <= damageVelocity)
 	{
 		bIsUsed = false;
 	}
-	else if (GetVelocity().Length() > 0)
+	else if (GetVelocity().Length() > damageVelocity)
 		bIsUsed = true;
 }
 
 FVector AThrowableObject::GetHoldingPosition()
 {
 	return holdingPosition->GetRelativeLocation();
+}
+
+USceneComponent* AThrowableObject::GetArrowPosition()
+{
+	return arrowPosition;
+}
+
+void AThrowableObject::DestroySoon()
+{
+	this->Destroy();
 }
 

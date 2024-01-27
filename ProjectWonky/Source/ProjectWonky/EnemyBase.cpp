@@ -64,6 +64,9 @@ void AEnemyBase::Tick(float DeltaTime)
 	case EEnemyStates::ES_MoveToTarget:
 		State_MoveToTarget();
 		break;
+	case EEnemyStates::ES_Staggered:
+		State_Staggered();
+		break;
 
 	case EEnemyStates::ES_DEFAULT:
 	case EEnemyStates::ES_ENTRY_AMOUNT:
@@ -82,6 +85,9 @@ void AEnemyBase::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent
 void AEnemyBase::AttackRange_BeginOverlap(UPrimitiveComponent* _overlappedComponent, AActor* _otherActor,
 	UPrimitiveComponent* _otherComp, int32 _otherBodyIndex, bool _bFromSweep, const FHitResult& _sweepResult)
 {
+	if (bIsStaggered)
+		return;
+
 	if (AProjectWonkyCharacter* player = Cast<AProjectWonkyCharacter>(_otherActor))
 	{
 		SetCurrentState(EEnemyStates::ES_Attack);
@@ -95,6 +101,12 @@ void AEnemyBase::AttackRange_BeginOverlap(UPrimitiveComponent* _overlappedCompon
 void AEnemyBase::AttackRange_EndOverlap(UPrimitiveComponent* _overlappedComponent, AActor* _otherActor,
 	UPrimitiveComponent* _otherComp, int32 _otherBodyIndex)
 {
+	if (bIsStaggered)
+	{
+		targetPlayer = nullptr;
+		return;
+	}
+
 	// Wenn der Player aus der attack range raus is soll der enemy nach ablauf des timer, bestimmt durch seinen attack cooldown, den spieler verfolgen
 	if (AProjectWonkyCharacter* player = Cast<AProjectWonkyCharacter>(_otherActor))
 	{
@@ -115,6 +127,9 @@ void AEnemyBase::AttackRange_EndOverlap(UPrimitiveComponent* _overlappedComponen
 void AEnemyBase::AggroRange_BeginOverlap(UPrimitiveComponent* _overlappedComponent, AActor* _otherActor,
 	UPrimitiveComponent* _otherComp, int32 _otherBodyIndex, bool _bFromSweep, const FHitResult& _sweepResult)
 {
+	if (bIsStaggered)
+		return;
+
 	if (AProjectWonkyCharacter* player = Cast<AProjectWonkyCharacter>(_otherActor))
 	{
 		targetPlayer = player;
@@ -125,6 +140,12 @@ void AEnemyBase::AggroRange_BeginOverlap(UPrimitiveComponent* _overlappedCompone
 void AEnemyBase::AggroRange_EndOverlap(UPrimitiveComponent* _overlappedComponent, AActor* _otherActor,
 	UPrimitiveComponent* _otherComp, int32 _otherBodyIndex)
 {
+	if (bIsStaggered)
+	{
+		targetPlayer = nullptr;
+		return;
+	}
+
 	if (AProjectWonkyCharacter* player = Cast<AProjectWonkyCharacter>(_otherActor))
 	{
 		targetPlayer = nullptr;
@@ -147,7 +168,7 @@ void AEnemyBase::Enemy_TakeDamage(float _damage, FVector _knockback)
 	// Apply Velo here, die gegner sollen auch velo erhalten können wenn sie tot sind 
 	LaunchCharacter(_knockback, true, false);
 
-	UE_LOG(LogTemp,Warning,TEXT("Take Damage"))
+	aiController->StopMovement();
 
 	if(currentHealth - _damage <= 0)
 	{
@@ -155,6 +176,7 @@ void AEnemyBase::Enemy_TakeDamage(float _damage, FVector _knockback)
 	}
 	else
 	{
+		SetCurrentState(EEnemyStates::ES_Staggered);
 		currentHealth -= _damage;
 	}
 }
@@ -167,7 +189,7 @@ void AEnemyBase::CommitAttack()
 	// Noch schauen das ich das von der rotatrion abhängig mache
 	FVector launchvelo = FVector(-attackKnockback, 0, attackKnockback);
 
-	targetPlayer->LaunchCharacter(launchvelo, true,false);
+	targetPlayer->LaunchCharacter(launchvelo, true,true);
 
 	// Give Damage to players
 }
@@ -175,6 +197,21 @@ void AEnemyBase::CommitAttack()
 void AEnemyBase::SetCurrentState(EEnemyStates _newState)
 {
 	currentState = _newState;
+
+	if (currentState != EEnemyStates::ES_Staggered)
+		return;
+
+	bIsStaggered = true;
+
+	auto waitlambda = [this]()
+		{
+			ResetStaggered();
+		};
+
+	FTimerDelegate timerdele;
+	timerdele.BindLambda(waitlambda);
+
+	world->GetTimerManager().SetTimer(ragdollTimerHandle, timerdele, ragdolltimer, false);
 }
 
 void AEnemyBase::State_MoveToTarget()
@@ -203,4 +240,19 @@ void AEnemyBase::State_Idle()
 void AEnemyBase::State_AttackCache()
 {
 	// Do Jack Shit
+}
+
+void AEnemyBase::State_Staggered()
+{
+	aiController->StopMovement();
+}
+
+void AEnemyBase::ResetStaggered()
+{
+	bIsStaggered = false;
+
+	if (targetPlayer)
+		SetCurrentState(EEnemyStates::ES_MoveToTarget);
+	else
+		SetCurrentState(EEnemyStates::ES_Idle);
 }

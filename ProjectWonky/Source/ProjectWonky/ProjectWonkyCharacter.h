@@ -36,6 +36,12 @@ class AProjectWonkyCharacter : public ACharacter
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Combat, meta = (AllowPrivateAccess = "true"))
 	class USceneComponent* holdingPosition;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Combat, meta = (AllowPrivateAccess = "true"))
+	class USceneComponent* arrowPosition;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Combat, meta = (AllowPrivateAccess = "true"))
+	class UStaticMeshComponent* throwIndicatorArrow;
 	
 	/** MappingContext */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
@@ -77,6 +83,9 @@ protected:
 	void Player_TakeDamage(float _damage);
 
 	UFUNCTION()
+	void OnPlayerDeath();
+
+	UFUNCTION()
 	void Look(const FInputActionValue& Value);
 
 	UFUNCTION()
@@ -115,6 +124,10 @@ protected:
 	UPROPERTY()
 	class AThrowableObject* throwObject;
 
+
+	UPROPERTY()
+	class AEnemyBase* enemyToAttack;
+
 	UPROPERTY()
 	bool holdingObject;
 
@@ -132,6 +145,16 @@ protected:
 	float rotationAmount;;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Combat, meta = (AllowPrivateAccess = true))
+	float playerHealth;
+
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Combat, meta = (AllowPrivateAccess = true))
+	float meeleDamage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Combat, meta = (AllowPrivateAccess = true))
+	float meeleknockbackForce;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Combat, meta = (AllowPrivateAccess = true))
 	FVector2D minMaxClampRotation;;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Combat, meta = (AllowPrivateAccess = true))
@@ -140,6 +163,8 @@ protected:
 
 	UPROPERTY()
 	bool onAttackCooldown;
+
+
 
 
 	UPROPERTY()
