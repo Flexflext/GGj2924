@@ -67,6 +67,12 @@ AProjectWonkyCharacter::AProjectWonkyCharacter()
 
 	holdingPosition = CreateDefaultSubobject<USceneComponent>(TEXT("HoldingPosition"));
 	holdingPosition->SetupAttachment(RootComponent);
+
+	arrowPosition = CreateDefaultSubobject<USceneComponent>(TEXT("ArrowPosition"));
+	arrowPosition->SetupAttachment(holdingPosition);
+
+	throwIndicatorArrow = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ThrowIndiArrow"));
+	throwIndicatorArrow->SetupAttachment(arrowPosition);
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
 }
@@ -77,6 +83,8 @@ void AProjectWonkyCharacter::BeginPlay()
 	Super::BeginPlay();
 
 	world = GetWorld();
+
+	throwIndicatorArrow->SetHiddenInGame(true);
 
 	//Add Input Mapping Context
 	if (APlayerController* PlayerController = Cast<APlayerController>(Controller))
@@ -228,9 +236,15 @@ void AProjectWonkyCharacter::PickupObject(const FInputActionValue& Value)
 		throwObject->SetActorRotation(holdingPosition->GetRelativeRotation(), ETeleportType::TeleportPhysics);
 
 		throwObject->AttachToComponent(holdingPosition, FAttachmentTransformRules::KeepRelativeTransform);
+
+
 		throwObject->SetActorLocation(holdingPosition->GetComponentLocation() - throwObject->GetHoldingPosition());
+		arrowPosition->SetWorldLocation(holdingPosition->GetComponentLocation() - throwObject->GetHoldingPosition());
+		throwIndicatorArrow->SetRelativeLocation(throwObject->GetArrowPosition()->GetRelativeLocation());
 
 		throwObject->SetItemPickStatus(true);
+
+		throwIndicatorArrow->SetHiddenInGame(false);
 	}
 
 	holdingObject = true;
@@ -251,18 +265,13 @@ void AProjectWonkyCharacter::Throw()
 
 
 	throwObject->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+	throwIndicatorArrow->SetHiddenInGame(true);
+
 	throwObject->mesh->SetSimulatePhysics(true);
-
-
-	FVector dir = GetActorForwardVector();
-
-	FRotator ror = { vectorRotation,0,0 };
-
-	dir = ror.RotateVector(dir);
 
 	throwObject->SetItemPickStatus(false);
 
-	throwObject->mesh->AddForce(dir * throwforce, NAME_None, true);
+	throwObject->mesh->AddForce(throwObject->mesh->GetForwardVector() * throwforce, NAME_None, true);
 
 
 
@@ -303,6 +312,7 @@ void AProjectWonkyCharacter::PickUpRange_EndOverlap(UPrimitiveComponent* _overla
 	if (objectInRange != nullptr)
 	{
 		objectInRange = nullptr;
+
 		//UE_LOG(LogTemp, Warning, TEXT("PickUpOutRange"))
 	}
 }
@@ -313,7 +323,7 @@ void AProjectWonkyCharacter::PickUpRange_BeginOverlap(UPrimitiveComponent* _over
 	if (_otherComp->ComponentHasTag(FName("Throwable")))
 	{
 		objectInRange = Cast<AThrowableObject>(_otherActor);
-
+		
 		//UE_LOG(LogTemp, Warning, TEXT("PickUpInRange"))
 
 		if (objectInRange == nullptr)
@@ -348,9 +358,13 @@ void AProjectWonkyCharacter::Look(const FInputActionValue& Value)
 			FVector dir = GetActorForwardVector();
 
 			FRotator ror = { vectorRotation,0,0 };
+			FRotator rorIndicator = { vectorRotation - 90,0,0 };
+			//ror += GetActorRotation();
+			//rorIndicator += GetActorRotation();
 
 			//dir = ror.RotateVector(dir);
-			throwObject->SetActorRotation(ror, ETeleportType::TeleportPhysics);
+			throwObject->SetActorRelativeRotation(ror); //, ETeleportType::TeleportPhysics);
+			arrowPosition->SetRelativeRotation(rorIndicator);// , ETeleportType::TeleportPhysics);
 		}
 
 	}	

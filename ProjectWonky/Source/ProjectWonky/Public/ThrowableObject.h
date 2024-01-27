@@ -26,6 +26,11 @@ public:
 	class USceneComponent* holdingPosition;
 
 
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Comps, meta = (AllowPrivateAccess = "true"))
+	class USceneComponent* arrowPosition;
+
+
 private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Stats, meta = (AllowPrivateAccess = true))
 	float knockbackForce;
@@ -69,6 +74,9 @@ public:
 
 	UFUNCTION()
 	FVector GetHoldingPosition();
+
+	UFUNCTION()
+	USceneComponent* GetArrowPosition();
 
 
 	UFUNCTION()

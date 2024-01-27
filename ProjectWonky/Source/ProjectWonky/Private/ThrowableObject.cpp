@@ -3,6 +3,7 @@
 
 #include "ThrowableObject.h"
 
+#include "Destructibles.h"
 #include "Components/BoxComponent.h"
 #include "ProjectWonky/EnemyBase.h"
 
@@ -18,6 +19,9 @@ AThrowableObject::AThrowableObject()
 
 	holdingPosition = CreateDefaultSubobject<USceneComponent>(TEXT("HoldingPosition"));
 	holdingPosition->SetupAttachment(RootComponent);
+
+	arrowPosition = CreateDefaultSubobject<USceneComponent>(TEXT("ArrowPosition"));
+	arrowPosition->SetupAttachment(RootComponent);
 
 	hitBox = CreateDefaultSubobject<UBoxComponent>(TEXT("HitBox"));
 	hitBox->SetupAttachment(mesh);
@@ -42,6 +46,11 @@ void AThrowableObject::Hit_BeginOverlap(UPrimitiveComponent* _overlappedComponen
 {
 	if (!bIsUsed)
 		return;
+
+	if (ADestructibles* destuctable = Cast<ADestructibles>(_otherActor))
+	{
+		destuctable->Destructible_TakeDamage(damage);
+	}
 
 	if (_otherComp->ComponentHasTag("Enemy"))
 	{
@@ -100,6 +109,11 @@ void AThrowableObject::TickUsedStatus()
 FVector AThrowableObject::GetHoldingPosition()
 {
 	return holdingPosition->GetRelativeLocation();
+}
+
+USceneComponent* AThrowableObject::GetArrowPosition()
+{
+	return arrowPosition;
 }
 
 void AThrowableObject::DestroySoon()
