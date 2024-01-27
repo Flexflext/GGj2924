@@ -85,6 +85,7 @@ void AProjectWonkyCharacter::BeginPlay()
 
 	world = GetWorld();
 
+	canPlayNewSound = true;
 	throwIndicatorArrow->SetHiddenInGame(true);
 
 	//Add Input Mapping Context
@@ -111,6 +112,19 @@ void AProjectWonkyCharacter::BeginPlay()
 	}
 }
 
+void AProjectWonkyCharacter::Tick(float DeltaSeconds)
+{
+	Super::Tick(DeltaSeconds);
+
+	if (wasfalling && GetCharacterMovement()->IsMovingOnGround())
+	{
+		JumpEnd();
+	}
+
+
+	wasfalling = GetCharacterMovement()->IsFalling();
+}
+
 //////////////////////////////////////////////////////////////////////////
 // Input
 
@@ -120,7 +134,7 @@ void AProjectWonkyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerIn
 	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent)) {
 		
 		// Jumping
-		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ACharacter::Jump);
+		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &AProjectWonkyCharacter::JumpStart);
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
 
 		// Moving
@@ -156,6 +170,34 @@ void AProjectWonkyCharacter::Move(const FInputActionValue& Value)
 
 		// add movement 
 		AddMovementInput(ForwardDirection, MovementVector.Y);
+
+		if (!inAir)
+		{
+			if (GetVelocity().X != 0)
+			{
+				if (canPlayNewSound)
+				{
+
+					canPlayNewSound = false;
+					world->GetTimerManager().SetTimer(
+						playNewSoundTImer,
+						this,
+						&AProjectWonkyCharacter::RegenFootStep,
+						timebetweenFootSteps,
+						false);
+
+
+					USoundBase* Sound = footSteps[FMath::RandRange(0, footSteps.Num() - 1)];
+
+					if (Sound)
+					{
+						UGameplayStatics::PlaySound2D(world, Sound);
+					}
+				}
+			}
+		}
+		
+
 		AddMovementInput(RightDirection, MovementVector.X);
 	}
 }
@@ -222,7 +264,7 @@ void AProjectWonkyCharacter::Player_TakeDamage(float _damage)
 
 void AProjectWonkyCharacter::OnPlayerDeath()
 {
-	UE_LOG(LogTemp, Warning, TEXT("PLayer is Dead"));
+	UE_LOG(LogTemp, Warning, TEXT("Player is Dead"));
 
 	if (AWinConditionManager* wcManager = Cast<AWinConditionManager>(UGameplayStatics::GetActorOfClass(world, AWinConditionManager::StaticClass())))
 		wcManager->DeductPlayerLife();
@@ -265,9 +307,29 @@ void AProjectWonkyCharacter::PickupObject(const FInputActionValue& Value)
 	holdingObject = true;
 }
 
+void AProjectWonkyCharacter::JumpStart(const FInputActionValue& Value)
+{
+	Jump();
+	inAir = true;
+
+	UGameplayStatics::PlaySound2D(world, jumpSound);
+}
+
+void AProjectWonkyCharacter::JumpEnd()
+{
+	inAir = false;
+
+	UGameplayStatics::PlaySound2D(world, landSound);
+}
+
 void AProjectWonkyCharacter::RegenAttack()
 {
 	onAttackCooldown = false;
+}
+
+void AProjectWonkyCharacter::RegenFootStep()
+{
+	canPlayNewSound = true;
 }
 
 void AProjectWonkyCharacter::Throw()
