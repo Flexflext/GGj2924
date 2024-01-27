@@ -10,6 +10,9 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
+#include "ThrowableObject.h"
+#include "Components/SphereComponent.h"
+#include "Kismet/GameplayStatics.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
@@ -50,6 +53,18 @@ AProjectWonkyCharacter::AProjectWonkyCharacter()
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName); // Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
 	FollowCamera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
 
+
+
+	sphereAttackCollision = CreateDefaultSubobject<USphereComponent>(TEXT("SphereCollision"));
+	sphereAttackCollision->SetupAttachment(RootComponent);
+
+
+	sphereThrowableObject = CreateDefaultSubobject<USphereComponent>(TEXT("SphereThrowable"));
+	sphereThrowableObject->SetupAttachment(RootComponent);
+
+
+	holdingPosition = CreateDefaultSubobject<USceneComponent>(TEXT("HoldingPosition"));
+	holdingPosition->SetupAttachment(RootComponent);
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
 }
@@ -59,6 +74,8 @@ void AProjectWonkyCharacter::BeginPlay()
 	// Call the base class  
 	Super::BeginPlay();
 
+	world = GetWorld();
+
 	//Add Input Mapping Context
 	if (APlayerController* PlayerController = Cast<APlayerController>(Controller))
 	{
@@ -66,6 +83,20 @@ void AProjectWonkyCharacter::BeginPlay()
 		{
 			Subsystem->AddMappingContext(DefaultMappingContext, 0);
 		}
+	}
+
+	if (sphereAttackCollision != nullptr)
+	{
+		//sphereAttackCollision->OnComponentBeginOverlap.AddDynamic(this,TEXT("AttackRange_BeginOverlap"));
+
+		sphereAttackCollision->OnComponentBeginOverlap.AddDynamic(this, &AProjectWonkyCharacter::AttackRange_BeginOverlap);
+		sphereAttackCollision->OnComponentEndOverlap.AddDynamic(this, &AProjectWonkyCharacter::AttackRange_EndOverlap);
+	}
+
+	if (sphereThrowableObject != nullptr)
+	{
+		sphereThrowableObject->OnComponentBeginOverlap.AddDynamic(this, &AProjectWonkyCharacter::PickUpRange_BeginOverlap);
+		sphereThrowableObject->OnComponentEndOverlap.AddDynamic(this, &AProjectWonkyCharacter::PickUpRange_EndOverlap);
 	}
 }
 
@@ -84,6 +115,8 @@ void AProjectWonkyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerIn
 		// Moving
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AProjectWonkyCharacter::Move);
 
+		EnhancedInputComponent->BindAction(PunchAction, ETriggerEvent::Started, this, &AProjectWonkyCharacter::Attack);
+		EnhancedInputComponent->BindAction(PickupAction, ETriggerEvent::Started, this, &AProjectWonkyCharacter::PickupObject);
 		// Looking
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AProjectWonkyCharacter::Look);
 	}
@@ -116,6 +149,147 @@ void AProjectWonkyCharacter::Move(const FInputActionValue& Value)
 	}
 }
 
+void AProjectWonkyCharacter::Attack(const FInputActionValue& Value)
+{
+	if (onAttackCooldown) return;
+
+	onAttackCooldown = true;
+	world->GetTimerManager().SetTimer(
+		attackCoolDownHandle, 
+		this,
+		&AProjectWonkyCharacter::RegenAttack, 
+		attackCooldown, 
+		false);
+
+
+
+	if (holdingObject)
+	{
+
+		UE_LOG(LogTemp, Warning, TEXT("Throw"))
+		Throw();
+
+		
+		return;
+	}
+
+	//Play Attack Animation
+	UE_LOG(LogTemp, Warning, TEXT("AttackAnimation"));
+
+	if (canAttackEnemy)
+	{
+		//Attack Enemy here
+	}
+
+	
+}
+
+void AProjectWonkyCharacter::PickupObject(const FInputActionValue& Value)
+{
+	if (holdingObject) return;
+	if (objectInRange == nullptr) return;
+
+	UE_LOG(LogTemp, Warning, TEXT("PickUp"));
+
+	throwObject = objectInRange;
+
+	if (throwObject != nullptr)
+	{
+		vectorRotation = 0;
+		throwObject->mesh->SetSimulatePhysics(false);
+
+		throwObject->SetActorRotation(holdingPosition->GetRelativeRotation(), ETeleportType::TeleportPhysics);
+
+		throwObject->AttachToComponent(holdingPosition, FAttachmentTransformRules::KeepRelativeTransform);
+		throwObject->SetActorLocation(holdingPosition->GetComponentLocation() - throwObject->GetHoldingPosition());
+	}
+
+	holdingObject = true;
+}
+
+void AProjectWonkyCharacter::RegenAttack()
+{
+	onAttackCooldown = false;
+}
+
+void AProjectWonkyCharacter::Throw()
+{
+
+	//Throw Object
+		//Play Throw Animation
+
+	//throwObject->DetachFromComponent
+
+
+	throwObject->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+	throwObject->mesh->SetSimulatePhysics(true);
+
+
+	FVector dir = GetActorForwardVector();
+
+	FRotator ror = { vectorRotation,0,0 };
+
+	dir = ror.RotateVector(dir);
+
+
+
+	throwObject->mesh->AddForce(dir * throwforce, NAME_None, true);
+
+
+
+
+	throwObject = nullptr;
+	holdingObject = false;
+}
+
+void AProjectWonkyCharacter::AttackRange_EndOverlap(UPrimitiveComponent* _overlappedComponent, AActor* _otherActor,
+                                                    UPrimitiveComponent* _otherComp, int32 _otherBodyIndex)
+{
+	if (_otherActor->Tags.Contains(FName("Enemy")))
+	{
+		canAttackEnemy = false;
+	}
+}
+
+void AProjectWonkyCharacter::AttackRange_BeginOverlap(UPrimitiveComponent* _overlappedComponent, AActor* _otherActor,
+	UPrimitiveComponent* _otherComp, int32 _otherBodyIndex, bool _bFromSweep, const FHitResult& _sweepResult)
+{
+	if (_otherActor->Tags.Contains(FName("Enemy")))
+	{
+		canAttackEnemy = true;
+	}
+
+}
+
+void AProjectWonkyCharacter::PickUpRange_EndOverlap(UPrimitiveComponent* _overlappedComponent, AActor* _otherActor,
+	UPrimitiveComponent* _otherComp, int32 _otherBodyIndex)
+{
+	if (objectInRange != nullptr)
+	{
+		objectInRange = nullptr;
+		UE_LOG(LogTemp, Warning, TEXT("PickUpOutRange"))
+	}
+}
+
+void AProjectWonkyCharacter::PickUpRange_BeginOverlap(UPrimitiveComponent* _overlappedComponent, AActor* _otherActor,
+	UPrimitiveComponent* _otherComp, int32 _otherBodyIndex, bool _bFromSweep, const FHitResult& _sweepResult)
+{
+	if (_otherActor->ActorHasTag(FName("Throwable")))
+	{
+		objectInRange = Cast<AThrowableObject>(_otherActor);
+
+		UE_LOG(LogTemp, Warning, TEXT("PickUpInRange"))
+
+		if (objectInRange == nullptr)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Throwobj not converted although right tag"))
+		}
+	}
+
+}
+
+
+
 void AProjectWonkyCharacter::Look(const FInputActionValue& Value)
 {
 	// input is a Vector2D
@@ -124,7 +298,24 @@ void AProjectWonkyCharacter::Look(const FInputActionValue& Value)
 	if (Controller != nullptr)
 	{
 		// add yaw and pitch input to controller
-		AddControllerYawInput(LookAxisVector.X);
-		AddControllerPitchInput(LookAxisVector.Y);
-	}
+		//AddControllerYawInput(LookAxisVector.X);
+		//AddControllerPitchInput(LookAxisVector.Y);
+
+		vectorRotation += LookAxisVector.Y * rotationAmount;
+
+		vectorRotation = FMath::Clamp(vectorRotation, minMaxClampRotation.X, minMaxClampRotation.Y);
+
+
+
+		if (throwObject != nullptr)
+		{
+			FVector dir = GetActorForwardVector();
+
+			FRotator ror = { vectorRotation,0,0 };
+
+			//dir = ror.RotateVector(dir);
+			throwObject->SetActorRotation(ror, ETeleportType::TeleportPhysics);
+		}
+
+	}	
 }
