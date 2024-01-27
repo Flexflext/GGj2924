@@ -1,6 +1,8 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "ProjectWonkyCharacter.h"
+
+#include "EnemyBase.h"
 #include "Engine/LocalPlayer.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -177,7 +179,17 @@ void AProjectWonkyCharacter::Attack(const FInputActionValue& Value)
 
 	if (canAttackEnemy)
 	{
+
+		UE_LOG(LogTemp, Warning, TEXT("Attack"))
 		//Attack Enemy here
+		FVector knockback = FVector(meeleknockbackForce, 0, meeleknockbackForce / 4);
+		if (enemyToAttack->GetActorLocation().X < GetActorLocation().X)
+		{
+			knockback = FVector(-meeleknockbackForce, 0, meeleknockbackForce / 4);
+		}
+
+
+		enemyToAttack->Enemy_TakeDamage(meeleDamage, knockback);
 	}
 
 	
@@ -185,6 +197,18 @@ void AProjectWonkyCharacter::Attack(const FInputActionValue& Value)
 
 void AProjectWonkyCharacter::Player_TakeDamage(float _damage)
 {
+	playerHealth -= _damage;
+
+	if (playerHealth <= 0)
+	{
+		OnPlayerDeath();
+		playerHealth = 0;
+	}
+}
+
+void AProjectWonkyCharacter::OnPlayerDeath()
+{
+	UE_LOG(LogTemp, Warning, TEXT("PLayer is Dead"));
 }
 
 void AProjectWonkyCharacter::PickupObject(const FInputActionValue& Value)
@@ -250,18 +274,25 @@ void AProjectWonkyCharacter::Throw()
 void AProjectWonkyCharacter::AttackRange_EndOverlap(UPrimitiveComponent* _overlappedComponent, AActor* _otherActor,
                                                     UPrimitiveComponent* _otherComp, int32 _otherBodyIndex)
 {
-	if (_otherActor->Tags.Contains(FName("Enemy")))
+	if (_otherComp->ComponentHasTag(FName("Enemy")))
 	{
 		canAttackEnemy = false;
+		enemyToAttack = nullptr;
 	}
 }
 
 void AProjectWonkyCharacter::AttackRange_BeginOverlap(UPrimitiveComponent* _overlappedComponent, AActor* _otherActor,
 	UPrimitiveComponent* _otherComp, int32 _otherBodyIndex, bool _bFromSweep, const FHitResult& _sweepResult)
 {
-	if (_otherActor->Tags.Contains(FName("Enemy")))
+	if (_otherComp->ComponentHasTag(FName("Enemy")))
 	{
-		canAttackEnemy = true;
+		enemyToAttack = Cast<AEnemyBase>(_otherActor);
+
+		if (enemyToAttack)
+		{
+			canAttackEnemy = true;
+		}
+		
 	}
 
 }
@@ -279,7 +310,7 @@ void AProjectWonkyCharacter::PickUpRange_EndOverlap(UPrimitiveComponent* _overla
 void AProjectWonkyCharacter::PickUpRange_BeginOverlap(UPrimitiveComponent* _overlappedComponent, AActor* _otherActor,
 	UPrimitiveComponent* _otherComp, int32 _otherBodyIndex, bool _bFromSweep, const FHitResult& _sweepResult)
 {
-	if (_otherActor->ActorHasTag(FName("Throwable")))
+	if (_otherComp->ComponentHasTag(FName("Throwable")))
 	{
 		objectInRange = Cast<AThrowableObject>(_otherActor);
 
