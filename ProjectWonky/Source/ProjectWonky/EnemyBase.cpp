@@ -102,7 +102,11 @@ void AEnemyBase::AttackRange_EndOverlap(UPrimitiveComponent* _overlappedComponen
 	UPrimitiveComponent* _otherComp, int32 _otherBodyIndex)
 {
 	if (bIsStaggered)
+	{
+		targetPlayer = nullptr;
 		return;
+	}
+
 	// Wenn der Player aus der attack range raus is soll der enemy nach ablauf des timer, bestimmt durch seinen attack cooldown, den spieler verfolgen
 	if (AProjectWonkyCharacter* player = Cast<AProjectWonkyCharacter>(_otherActor))
 	{
@@ -125,6 +129,7 @@ void AEnemyBase::AggroRange_BeginOverlap(UPrimitiveComponent* _overlappedCompone
 {
 	if (bIsStaggered)
 		return;
+
 	if (AProjectWonkyCharacter* player = Cast<AProjectWonkyCharacter>(_otherActor))
 	{
 		targetPlayer = player;
@@ -136,7 +141,11 @@ void AEnemyBase::AggroRange_EndOverlap(UPrimitiveComponent* _overlappedComponent
 	UPrimitiveComponent* _otherComp, int32 _otherBodyIndex)
 {
 	if (bIsStaggered)
+	{
+		targetPlayer = nullptr;
 		return;
+	}
+
 	if (AProjectWonkyCharacter* player = Cast<AProjectWonkyCharacter>(_otherActor))
 	{
 		targetPlayer = nullptr;
