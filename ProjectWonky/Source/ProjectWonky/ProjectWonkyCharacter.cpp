@@ -191,7 +191,7 @@ void AProjectWonkyCharacter::Move(const FInputActionValue& Value)
 
 					if (Sound)
 					{
-						UGameplayStatics::PlaySound2D(world, Sound);
+						UGameplayStatics::PlaySound2D(world, Sound, 1);
 					}
 				}
 			}
@@ -223,27 +223,21 @@ void AProjectWonkyCharacter::Attack(const FInputActionValue& Value)
 	}
 	else
 	{
+		onAttackCooldown = true;
+		world->GetTimerManager().SetTimer(
+			attackDelayTimer,
+			this,
+			&AProjectWonkyCharacter::DelayedAttack,
+			timeDelayforPunch,
+			false);
+
+
 		//Play Attack Animation
 		UE_LOG(LogTemp, Warning, TEXT("AttackAnimation"));
 
 		PlayAnimMontage(attackAnimMontage);
 
-		UGameplayStatics::PlaySound2D(world, punchSound);
-
-		if (canAttackEnemy)
-		{
-
-			UE_LOG(LogTemp, Warning, TEXT("Attack"))
-				//Attack Enemy here
-				FVector knockback = FVector(meeleknockbackForce, 0, meeleknockbackForce / 4);
-			if (enemyToAttack->GetActorLocation().X < GetActorLocation().X)
-			{
-				knockback = FVector(-meeleknockbackForce, 0, meeleknockbackForce / 4);
-			}
-
-
-			enemyToAttack->Enemy_TakeDamage(meeleDamage, knockback);
-		}
+		
 	}
 
 	
@@ -365,6 +359,26 @@ void AProjectWonkyCharacter::Throw()
 
 	throwObject = nullptr;
 	holdingObject = false;
+}
+
+void AProjectWonkyCharacter::DelayedAttack()
+{
+
+	if (canAttackEnemy)
+	{
+		UGameplayStatics::PlaySound2D(world, punchSound);
+
+		UE_LOG(LogTemp, Warning, TEXT("Attack"))
+			//Attack Enemy here
+			FVector knockback = FVector(meeleknockbackForce, 0, meeleknockbackForce / 4);
+		if (enemyToAttack->GetActorLocation().X < GetActorLocation().X)
+		{
+			knockback = FVector(-meeleknockbackForce, 0, meeleknockbackForce / 4);
+		}
+
+
+		enemyToAttack->Enemy_TakeDamage(meeleDamage, knockback);
+	}
 }
 
 void AProjectWonkyCharacter::AttackRange_EndOverlap(UPrimitiveComponent* _overlappedComponent, AActor* _otherActor,
