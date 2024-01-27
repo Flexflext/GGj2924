@@ -17,12 +17,6 @@ AEnemyBase::AEnemyBase()
 
 	currentHealth = enemyMaxHealth;
 
-	enemyHitbox = CreateDefaultSubobject<UCapsuleComponent>("Hitbox");
-	RootComponent = enemyHitbox;
-
-	enemyMeshh = CreateDefaultSubobject<UStaticMeshComponent>("Enemy Mesh_0");
-	enemyMeshh->SetupAttachment(GetRootComponent());
-
 	aggroBox = CreateDefaultSubobject<USphereComponent>("AggroBox");
 	aggroBox->SetupAttachment(GetRootComponent());
 
@@ -169,6 +163,8 @@ void AEnemyBase::CommitAttack()
 	FVector launchvelo = FVector(0, attackKnockback, attackKnockback);
 
 	targetPlayer->LaunchCharacter(launchvelo, true,false);
+
+	UE_LOG(LogTemp,Warning,TEXT("DDD"))
 
 	// Give Damage to players
 }

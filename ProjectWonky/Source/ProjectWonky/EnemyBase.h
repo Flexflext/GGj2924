@@ -49,14 +49,6 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = EnemyStats, meta = (AllowPrivateAccess))
 	USphereComponent* aggroBox;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = EnemyStats, meta = (AllowPrivateAccess))
-	UStaticMeshComponent* enemyMesh;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = EnemyStats, meta = (AllowPrivateAccess))
-	UStaticMeshComponent* enemyMeshh;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = EnemyStats, meta = (AllowPrivateAccess))
-	class UCapsuleComponent* enemyHitbox;
-
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = EnemyStatus, meta = (AllowPrivateAccess))
 	class AProjectWonkyCharacter* targetPlayer;
 
@@ -82,9 +74,6 @@ private:
 
 	UPROPERTY()
 	FVector startPos;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = EnemyStats, meta = (AllowPrivateAccess))
-	float MovementSpeed;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = EnemyStats, meta = (AllowPrivateAccess))
 	class AAIController* aiController;
