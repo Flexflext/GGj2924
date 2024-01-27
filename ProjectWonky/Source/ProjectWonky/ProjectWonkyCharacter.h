@@ -74,6 +74,9 @@ protected:
 	void Attack(const FInputActionValue& Value);
 
 	UFUNCTION()
+	void Player_TakeDamage(float _damage);
+
+	UFUNCTION()
 	void Look(const FInputActionValue& Value);
 
 	UFUNCTION()

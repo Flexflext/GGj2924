@@ -76,6 +76,9 @@ private:
 	FVector startPos;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = EnemyStats, meta = (AllowPrivateAccess))
+	float yDefault;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = EnemyStats, meta = (AllowPrivateAccess))
 	class AAIController* aiController;
 
 private:
@@ -96,9 +99,6 @@ private:
 	void CleanEnemyDeath();
 
 	UFUNCTION()
-	void Enemy_TakeDamage(float _damage, FVector _knockback);
-
-	UFUNCTION()
 	void CommitAttack();
 
 	UFUNCTION()
@@ -111,4 +111,8 @@ private:
 	void State_Idle();
 	UFUNCTION()
 	void State_AttackCache();
+
+public:
+	UFUNCTION()
+		void Enemy_TakeDamage(float _damage, FVector _knockback);
 };

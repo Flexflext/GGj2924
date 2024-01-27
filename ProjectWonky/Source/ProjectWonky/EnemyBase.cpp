@@ -23,7 +23,7 @@ AEnemyBase::AEnemyBase()
 	attackBox = CreateDefaultSubobject<USphereComponent>("AttackBox;");
 	attackBox->SetupAttachment(GetRootComponent());
 
-	currentHealth = enemyMaxHealth;
+	yDefault = 1000.f;
 }
 
 // Called when the game starts or when spawned
@@ -40,6 +40,7 @@ void AEnemyBase::BeginPlay()
 	aggroBox->OnComponentEndOverlap.AddDynamic(this, &AEnemyBase::AggroRange_EndOverlap);
 	
 	aiController = Cast<AAIController>(GetController());
+	currentHealth = enemyMaxHealth;
 
 	startPos = GetActorLocation();
 }
@@ -144,6 +145,9 @@ void AEnemyBase::CleanEnemyDeath()
 void AEnemyBase::Enemy_TakeDamage(float _damage, FVector _knockback)
 {
 	// Apply Velo here, die gegner sollen auch velo erhalten können wenn sie tot sind 
+	LaunchCharacter(_knockback, true, false);
+
+	UE_LOG(LogTemp,Warning,TEXT("Take Damage"))
 
 	if(currentHealth - _damage <= 0)
 	{
@@ -160,11 +164,10 @@ void AEnemyBase::CommitAttack()
 	if (!targetPlayer)
 		return;
 
-	FVector launchvelo = FVector(0, attackKnockback, attackKnockback);
+	// Noch schauen das ich das von der rotatrion abhängig mache
+	FVector launchvelo = FVector(-attackKnockback, 0, attackKnockback);
 
 	targetPlayer->LaunchCharacter(launchvelo, true,false);
-
-	UE_LOG(LogTemp,Warning,TEXT("DDD"))
 
 	// Give Damage to players
 }
@@ -179,10 +182,7 @@ void AEnemyBase::State_MoveToTarget()
 	// Target kann eh nur player sein
 
 	if(!targetPlayer)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("AEnemyBase, !targetPlayer"));
 		return;
-	}
 
 	if (!aiController)
 	{
@@ -190,10 +190,9 @@ void AEnemyBase::State_MoveToTarget()
 		return;
 	}
 
-	//FVector adjplayerpos = FVector(targetPlayer->GetActorLocation().X, GetActorLocation().Y, GetActorLocation().Z);
+	FVector adjplayerpos = FVector(targetPlayer->GetActorLocation().X, yDefault, GetActorLocation().Z);
 
-	//aiController->MoveToLocation(targetPlayer->GetActorLocation());
-	aiController->MoveToActor(targetPlayer);
+	aiController->MoveToLocation(adjplayerpos);
 }
 
 void AEnemyBase::State_Idle()

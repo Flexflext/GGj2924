@@ -162,7 +162,6 @@ void AProjectWonkyCharacter::Attack(const FInputActionValue& Value)
 		false);
 
 
-
 	if (holdingObject)
 	{
 
@@ -184,6 +183,10 @@ void AProjectWonkyCharacter::Attack(const FInputActionValue& Value)
 	
 }
 
+void AProjectWonkyCharacter::Player_TakeDamage(float _damage)
+{
+}
+
 void AProjectWonkyCharacter::PickupObject(const FInputActionValue& Value)
 {
 	if (holdingObject) return;
@@ -202,6 +205,8 @@ void AProjectWonkyCharacter::PickupObject(const FInputActionValue& Value)
 
 		throwObject->AttachToComponent(holdingPosition, FAttachmentTransformRules::KeepRelativeTransform);
 		throwObject->SetActorLocation(holdingPosition->GetComponentLocation() - throwObject->GetHoldingPosition());
+
+		throwObject->SetItemPickStatus(true);
 	}
 
 	holdingObject = true;
@@ -231,7 +236,7 @@ void AProjectWonkyCharacter::Throw()
 
 	dir = ror.RotateVector(dir);
 
-
+	throwObject->SetItemPickStatus(false);
 
 	throwObject->mesh->AddForce(dir * throwforce, NAME_None, true);
 
@@ -267,7 +272,7 @@ void AProjectWonkyCharacter::PickUpRange_EndOverlap(UPrimitiveComponent* _overla
 	if (objectInRange != nullptr)
 	{
 		objectInRange = nullptr;
-		UE_LOG(LogTemp, Warning, TEXT("PickUpOutRange"))
+		//UE_LOG(LogTemp, Warning, TEXT("PickUpOutRange"))
 	}
 }
 
@@ -278,11 +283,11 @@ void AProjectWonkyCharacter::PickUpRange_BeginOverlap(UPrimitiveComponent* _over
 	{
 		objectInRange = Cast<AThrowableObject>(_otherActor);
 
-		UE_LOG(LogTemp, Warning, TEXT("PickUpInRange"))
+		//UE_LOG(LogTemp, Warning, TEXT("PickUpInRange"))
 
 		if (objectInRange == nullptr)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("Throwobj not converted although right tag"))
+			//UE_LOG(LogTemp, Warning, TEXT("Throwobj not converted although right tag"))
 		}
 	}
 

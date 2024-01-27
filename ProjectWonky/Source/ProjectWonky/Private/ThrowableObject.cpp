@@ -4,6 +4,7 @@
 #include "ThrowableObject.h"
 
 #include "Components/BoxComponent.h"
+#include "ProjectWonky/EnemyBase.h"
 
 // Sets default values
 AThrowableObject::AThrowableObject()
@@ -31,13 +32,50 @@ void AThrowableObject::BeginPlay()
 
 	this->Tags.AddUnique(FName("Throwable"));
 
+	hitBox->OnComponentBeginOverlap.AddDynamic(this, &AThrowableObject::Hit_BeginOverlap);
+
 }
-  
+
+void AThrowableObject::Hit_BeginOverlap(UPrimitiveComponent* _overlappedComponent, AActor* _otherActor,
+	UPrimitiveComponent* _otherComp, int32 _otherBodyIndex, bool _bFromSweep, const FHitResult& _sweepResult)
+{
+	if (!bIsUsed)
+		return;
+
+	if (_otherComp->ComponentHasTag("Enemy"))
+	{
+		AEnemyBase* enemy = Cast<AEnemyBase>(_otherActor);
+		FVector knockback = FVector(knockbackForce,0, knockbackForce);
+
+		enemy->Enemy_TakeDamage(damage, knockback);
+
+		this->Destroy();
+		// Hier Animations oder so mit renne
+	}
+}
+
+void AThrowableObject::Hit_EndOverlap(UPrimitiveComponent* _overlappedComponent, AActor* _otherActor,
+	UPrimitiveComponent* _otherComp, int32 _otherBodyIndex)
+{
+}
+
 // Called every frame
 void AThrowableObject::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	if (!bIsPicketUp)
+		TickUsedStatus();
+}
+
+void AThrowableObject::TickUsedStatus()
+{
+	if (GetVelocity().Length() <= 0)
+	{
+		bIsUsed = false;
+	}
+	else if (GetVelocity().Length() > 0)
+		bIsUsed = true;
 }
 
 FVector AThrowableObject::GetHoldingPosition()
