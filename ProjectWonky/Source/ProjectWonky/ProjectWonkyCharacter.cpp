@@ -224,6 +224,9 @@ void AProjectWonkyCharacter::Attack(const FInputActionValue& Value)
 	else
 	{
 		onAttackCooldown = true;
+
+		UGameplayStatics::PlaySound2D(world, attackSound);
+
 		world->GetTimerManager().SetTimer(
 			attackDelayTimer,
 			this,
@@ -291,7 +294,7 @@ void AProjectWonkyCharacter::PickupObject(const FInputActionValue& Value)
 
 		throwObject->SetActorRotation(holdingPosition->GetRelativeRotation(), ETeleportType::TeleportPhysics);
 
-		throwObject->AttachToComponent(holdingPosition, FAttachmentTransformRules::KeepRelativeTransform);
+		throwObject->AttachToComponent(holdingPosition, FAttachmentTransformRules::KeepWorldTransform);
 
 
 		throwObject->SetActorLocation(holdingPosition->GetComponentLocation() - throwObject->GetHoldingPosition());
@@ -458,13 +461,13 @@ void AProjectWonkyCharacter::Look(const FInputActionValue& Value)
 		{
 
 			FRotator ror = { -vectorRotation,0,0 };
-			FRotator rorIndicator = { -vectorRotation - 90,0,0 };
+			//FRotator rorIndicator = { -vectorRotation - 90,0,0 };
 			//ror += GetActorRotation();
 			//rorIndicator += GetActorRotation();
 
 			//dir = ror.RotateVector(dir);
 			throwObject->SetActorRelativeRotation(ror); //, ETeleportType::TeleportPhysics);
-			arrowPosition->SetRelativeRotation(rorIndicator);// , ETeleportType::TeleportPhysics);
+			arrowPosition->SetRelativeRotation(ror);// , ETeleportType::TeleportPhysics);
 		}
 
 	}	
