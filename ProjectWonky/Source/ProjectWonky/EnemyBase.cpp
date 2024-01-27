@@ -7,6 +7,7 @@
 #include "Components/CapsuleComponent.h"
 #include "Components/SphereComponent.h"
 #include "GameFramework/PawnMovementComponent.h"
+#include "Kismet/KismetMaterialLibrary.h"
 #include "Runtime/AIModule/Classes/AIController.h"
 
 // Sets default values
@@ -24,6 +25,8 @@ AEnemyBase::AEnemyBase()
 	attackBox->SetupAttachment(GetRootComponent());
 
 	yDefault = 1000.f;
+
+	materialDefaultValue = -1.f;
 }
 
 // Called when the game starts or when spawned
@@ -50,6 +53,11 @@ void AEnemyBase::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	if (bHasDied)
+	{
+		FadeMaterial(DeltaTime);
+		return;
+	}
 
 	switch (currentState)
 	{
@@ -82,10 +90,15 @@ void AEnemyBase::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent
 
 }
 
-void AEnemyBase::AttackRange_BeginOverlap(UPrimitiveComponent* _overlappedComponent, AActor* _otherActor,
-	UPrimitiveComponent* _otherComp, int32 _otherBodyIndex, bool _bFromSweep, const FHitResult& _sweepResult)
+void AEnemyBase::FadeMaterial(float _dt)
 {
-	if (bIsStaggered)
+	GetMesh()->SetScalarParameterValueOnMaterials("FadeAmount", materialDefaultValue += _dt);
+}
+
+void AEnemyBase::AttackRange_BeginOverlap(UPrimitiveComponent* _overlappedComponent, AActor* _otherActor,
+                                          UPrimitiveComponent* _otherComp, int32 _otherBodyIndex, bool _bFromSweep, const FHitResult& _sweepResult)
+{
+	if (bIsStaggered || bHasDied)
 		return;
 
 	if (AProjectWonkyCharacter* player = Cast<AProjectWonkyCharacter>(_otherActor))
@@ -94,14 +107,14 @@ void AEnemyBase::AttackRange_BeginOverlap(UPrimitiveComponent* _overlappedCompon
 
 		world->GetTimerManager().SetTimer(cooldownTimerHandle, this, &AEnemyBase::CommitAttack, attackCooldown);
 
-		//aiController->StopMovement();
+		aiController->StopMovement();
 	}
 }
 
 void AEnemyBase::AttackRange_EndOverlap(UPrimitiveComponent* _overlappedComponent, AActor* _otherActor,
 	UPrimitiveComponent* _otherComp, int32 _otherBodyIndex)
 {
-	if (bIsStaggered)
+	if (bIsStaggered || bHasDied)
 	{
 		targetPlayer = nullptr;
 		return;
@@ -127,7 +140,7 @@ void AEnemyBase::AttackRange_EndOverlap(UPrimitiveComponent* _overlappedComponen
 void AEnemyBase::AggroRange_BeginOverlap(UPrimitiveComponent* _overlappedComponent, AActor* _otherActor,
 	UPrimitiveComponent* _otherComp, int32 _otherBodyIndex, bool _bFromSweep, const FHitResult& _sweepResult)
 {
-	if (bIsStaggered)
+	if (bIsStaggered || bHasDied)
 		return;
 
 	if (AProjectWonkyCharacter* player = Cast<AProjectWonkyCharacter>(_otherActor))
@@ -140,7 +153,7 @@ void AEnemyBase::AggroRange_BeginOverlap(UPrimitiveComponent* _overlappedCompone
 void AEnemyBase::AggroRange_EndOverlap(UPrimitiveComponent* _overlappedComponent, AActor* _otherActor,
 	UPrimitiveComponent* _otherComp, int32 _otherBodyIndex)
 {
-	if (bIsStaggered)
+	if (bIsStaggered || bHasDied)
 	{
 		targetPlayer = nullptr;
 		return;
@@ -153,8 +166,16 @@ void AEnemyBase::AggroRange_EndOverlap(UPrimitiveComponent* _overlappedComponent
 	}
 }
 
-void AEnemyBase::OnEnemyDeath()
+void AEnemyBase::OnEnemyDeath(FVector _knockback)
 {
+	bHasDied = true;
+	aiController->StopMovement();
+
+	GetMesh()->SetSimulatePhysics(true);
+
+	GetMesh()->AddForce(_knockback);
+
+
 	world->GetTimerManager().SetTimer(ragdollTimerHandle, this, &AEnemyBase::CleanEnemyDeath, ragdolltimer);
 }
 
@@ -166,13 +187,14 @@ void AEnemyBase::CleanEnemyDeath()
 void AEnemyBase::Enemy_TakeDamage(float _damage, FVector _knockback)
 {
 	// Apply Velo here, die gegner sollen auch velo erhalten können wenn sie tot sind 
-	LaunchCharacter(_knockback, true, false);
-
 	aiController->StopMovement();
+
+
+	GetMesh()->SetSimulatePhysics(true);
 
 	if(currentHealth - _damage <= 0)
 	{
-		OnEnemyDeath();
+		OnEnemyDeath(_knockback);
 	}
 	else
 	{
@@ -204,9 +226,9 @@ void AEnemyBase::SetCurrentState(EEnemyStates _newState)
 	bIsStaggered = true;
 
 	auto waitlambda = [this]()
-		{
-			ResetStaggered();
-		};
+	{
+		ResetStaggered();
+	};
 
 	FTimerDelegate timerdele;
 	timerdele.BindLambda(waitlambda);
