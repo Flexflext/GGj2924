@@ -214,6 +214,7 @@ void AEnemyBase::CommitAttack()
 	targetPlayer->LaunchCharacter(launchvelo, true,true);
 
 	// Give Damage to players
+	//targetPlayer->Player_
 }
 
 void AEnemyBase::SetCurrentState(EEnemyStates _newState)
