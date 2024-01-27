@@ -232,6 +232,10 @@ protected:
 
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Sounds, meta = (AllowPrivateAccess = true))
+	class USoundBase* attackSound;
+
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Sounds, meta = (AllowPrivateAccess = true))
 	TArray<class USoundBase*> throwSounds;
 
 

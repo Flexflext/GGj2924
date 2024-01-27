@@ -57,7 +57,7 @@ void AThrowableObject::Hit_BeginOverlap(UPrimitiveComponent* _overlappedComponen
 			&AThrowableObject::CanPlayNewSound,
 			0.3f,
 			false);
-		UGameplayStatics::PlaySound2D(GetWorld(), impactSound);
+		UGameplayStatics::PlaySound2D(GetWorld(), impactSound, 0.2f);
 	}
 	
 
