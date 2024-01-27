@@ -34,6 +34,8 @@ public:
 	FORCEINLINE
 		bool GetHasDied() { return bHasDied; }
 
+	UFUNCTION()
+	void FadeMaterial(float _dt);
 
 private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly,Category = EnemyStats, meta = (AllowPrivateAccess))
@@ -84,6 +86,9 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = EnemyStats, meta = (AllowPrivateAccess))
 	class AAIController* aiController;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = EnemyStats, meta = (AllowPrivateAccess))
+	float materialDefaultValue;
+
 private:
 	UFUNCTION()
 	virtual void AttackRange_BeginOverlap(UPrimitiveComponent* _overlappedComponent, AActor* _otherActor, UPrimitiveComponent* _otherComp, int32 _otherBodyIndex, bool _bFromSweep, const FHitResult& _sweepResult);
@@ -96,7 +101,7 @@ private:
 	virtual void AggroRange_EndOverlap(UPrimitiveComponent* _overlappedComponent, AActor* _otherActor, UPrimitiveComponent* _otherComp, int32 _otherBodyIndex);
 
 	UFUNCTION()
-	void OnEnemyDeath();
+	void OnEnemyDeath(FVector _knockback);
 
 	UFUNCTION()
 	void CleanEnemyDeath();
@@ -119,7 +124,6 @@ private:
 
 	UFUNCTION()
 	void ResetStaggered();
-
 public:
 	UFUNCTION()
 		void Enemy_TakeDamage(float _damage, FVector _knockback);
