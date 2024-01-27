@@ -67,6 +67,8 @@ class AProjectWonkyCharacter : public ACharacter
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* LookAction;
 
+
+
 public:
 	AProjectWonkyCharacter();
 	
@@ -160,7 +162,6 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Combat, meta = (AllowPrivateAccess = true))
 	float vectorRotation;
 
-
 	UPROPERTY()
 	bool onAttackCooldown;
 
@@ -172,6 +173,24 @@ protected:
 
 	UPROPERTY()
 	UWorld* world;
+
+
+protected:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Sounds, meta = (AllowPrivateAccess = true))
+	class USoundBase* getdamageSound;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Sounds, meta = (AllowPrivateAccess = true))
+	class USoundBase* punchSound;
+
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Sounds, meta = (AllowPrivateAccess = true))
+	class USoundBase* pickupSound;
+
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Sounds, meta = (AllowPrivateAccess = true))
+	TArray<class USoundBase*> throwSounds;
+
+
 
 
 public:

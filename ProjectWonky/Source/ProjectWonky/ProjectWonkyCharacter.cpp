@@ -178,28 +178,31 @@ void AProjectWonkyCharacter::Attack(const FInputActionValue& Value)
 
 		UE_LOG(LogTemp, Warning, TEXT("Throw"))
 		Throw();
-
-		
-		return;
 	}
-
-	//Play Attack Animation
-	UE_LOG(LogTemp, Warning, TEXT("AttackAnimation"));
-
-	if (canAttackEnemy)
+	else
 	{
+		//Play Attack Animation
+		UE_LOG(LogTemp, Warning, TEXT("AttackAnimation"));
 
-		UE_LOG(LogTemp, Warning, TEXT("Attack"))
-		//Attack Enemy here
-		FVector knockback = FVector(meeleknockbackForce, 0, meeleknockbackForce / 4);
-		if (enemyToAttack->GetActorLocation().X < GetActorLocation().X)
+		UGameplayStatics::PlaySound2D(world, punchSound);
+
+		if (canAttackEnemy)
 		{
-			knockback = FVector(-meeleknockbackForce, 0, meeleknockbackForce / 4);
+
+			UE_LOG(LogTemp, Warning, TEXT("Attack"))
+				//Attack Enemy here
+				FVector knockback = FVector(meeleknockbackForce, 0, meeleknockbackForce / 4);
+			if (enemyToAttack->GetActorLocation().X < GetActorLocation().X)
+			{
+				knockback = FVector(-meeleknockbackForce, 0, meeleknockbackForce / 4);
+			}
+
+
+			enemyToAttack->Enemy_TakeDamage(meeleDamage, knockback);
 		}
-
-
-		enemyToAttack->Enemy_TakeDamage(meeleDamage, knockback);
 	}
+
+	
 
 	
 }
@@ -207,6 +210,8 @@ void AProjectWonkyCharacter::Attack(const FInputActionValue& Value)
 void AProjectWonkyCharacter::Player_TakeDamage(float _damage)
 {
 	playerHealth -= _damage;
+
+	UGameplayStatics::PlaySound2D(world, getdamageSound);
 
 	if (playerHealth <= 0)
 	{
@@ -240,6 +245,9 @@ void AProjectWonkyCharacter::PickupObject(const FInputActionValue& Value)
 		vectorRotation = 0;
 		throwObject->mesh->SetSimulatePhysics(false);
 
+
+		UGameplayStatics::PlaySound2D(world, pickupSound);
+
 		throwObject->SetActorRotation(holdingPosition->GetRelativeRotation(), ETeleportType::TeleportPhysics);
 
 		throwObject->AttachToComponent(holdingPosition, FAttachmentTransformRules::KeepRelativeTransform);
@@ -264,7 +272,12 @@ void AProjectWonkyCharacter::RegenAttack()
 
 void AProjectWonkyCharacter::Throw()
 {
+	USoundBase* Sound = throwSounds[FMath::RandRange(0, throwSounds.Num() - 1)];
 
+	if (Sound)
+	{
+		UGameplayStatics::PlaySound2D(world, Sound);
+	}
 	//Throw Object
 		//Play Throw Animation
 
@@ -362,10 +375,9 @@ void AProjectWonkyCharacter::Look(const FInputActionValue& Value)
 
 		if (throwObject != nullptr)
 		{
-			FVector dir = GetActorForwardVector();
 
-			FRotator ror = { vectorRotation,0,0 };
-			FRotator rorIndicator = { vectorRotation - 90,0,0 };
+			FRotator ror = { -vectorRotation,0,0 };
+			FRotator rorIndicator = { -vectorRotation - 90,0,0 };
 			//ror += GetActorRotation();
 			//rorIndicator += GetActorRotation();
 
