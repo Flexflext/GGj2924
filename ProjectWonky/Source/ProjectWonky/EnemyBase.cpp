@@ -172,9 +172,9 @@ void AEnemyBase::OnEnemyDeath(FVector _knockback)
 	aiController->StopMovement();
 
 	GetMesh()->SetSimulatePhysics(true);
+	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
 
 	GetMesh()->AddForce(_knockback);
-
 
 	world->GetTimerManager().SetTimer(ragdollTimerHandle, this, &AEnemyBase::CleanEnemyDeath, ragdolltimer);
 }
@@ -205,7 +205,7 @@ void AEnemyBase::Enemy_TakeDamage(float _damage, FVector _knockback)
 
 void AEnemyBase::CommitAttack()
 {
-	if (!targetPlayer)
+	if (!targetPlayer || bHasDied)
 		return;
 
 	// Noch schauen das ich das von der rotatrion abhängig mache
