@@ -148,6 +148,8 @@ protected:
 
 	UPROPERTY()
 	class AEnemyBase* enemyToAttack;
+	UPROPERTY()
+	class ADestructibles* currDestructible;
 
 	UPROPERTY()
 	bool holdingObject;
@@ -170,6 +172,8 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Combat, meta = (AllowPrivateAccess = true))
 	float playerHealth;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Combat, meta = (AllowPrivateAccess = true))
+	float playerMaxHealth;
 
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Combat, meta = (AllowPrivateAccess = true))
@@ -263,6 +267,8 @@ public:
 
 	FORCEINLINE
 	float GetPlayerHealth() { return playerHealth; }
+	FORCEINLINE
+	float GetPlayerMaxHealth() { return playerMaxHealth; }
 
 };
 
