@@ -226,6 +226,8 @@ void AProjectWonkyCharacter::Attack(const FInputActionValue& Value)
 		//Play Attack Animation
 		UE_LOG(LogTemp, Warning, TEXT("AttackAnimation"));
 
+		PlayAnimMontage(attackAnimMontage);
+
 		UGameplayStatics::PlaySound2D(world, punchSound);
 
 		if (canAttackEnemy)
@@ -288,6 +290,9 @@ void AProjectWonkyCharacter::PickupObject(const FInputActionValue& Value)
 		throwObject->mesh->SetSimulatePhysics(false);
 
 
+		PlayAnimMontage(pickupAnimation);
+
+
 		UGameplayStatics::PlaySound2D(world, pickupSound);
 
 		throwObject->SetActorRotation(holdingPosition->GetRelativeRotation(), ETeleportType::TeleportPhysics);
@@ -344,7 +349,7 @@ void AProjectWonkyCharacter::Throw()
 		//Play Throw Animation
 
 	//throwObject->DetachFromComponent
-
+	PlayAnimMontage(throwAnimation);
 
 	throwObject->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
 	throwIndicatorArrow->SetHiddenInGame(true);
