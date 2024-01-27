@@ -29,6 +29,8 @@ void ADestructibles::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	if (bHasDied)
+		TickMaterialFade(DeltaTime);
 }
 
 void ADestructibles::Destructible_TakeDamage(float _damage)
@@ -41,8 +43,17 @@ void ADestructibles::Destructible_TakeDamage(float _damage)
 		destructibleHealth -= _damage;
 }
 
+void ADestructibles::TickMaterialFade(float _dt)
+{
+	objectMesh->SetScalarParameterValueOnMaterials("FadeAmount", materialDefaultValue += _dt);
+}
+
 void ADestructibles::OnDestructibleDeath()
 {
+	bHasDied = true;
+
+	objectMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
 	world->GetTimerManager().SetTimer(deathTimerHandle, this, &ADestructibles::CleanDestructibleDeath, deathTimer, false);
 }
 
