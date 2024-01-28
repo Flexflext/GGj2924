@@ -32,6 +32,9 @@ public:
 	UFUNCTION(BlueprintImplementableEvent)
 	void OnDeathEvent();
 
+	UFUNCTION(BlueprintImplementableEvent)
+	void OnWin();
+
 private:
 	UPROPERTY(EditAnywhere,BlueprintReadOnly, Category = Comps, meta = (AllowPrivateAccess))
 	UStaticMeshComponent* winCollider;

@@ -31,6 +31,8 @@ void AWinConditionManager::OnPlayer_BeginOverlap(UPrimitiveComponent* _overlappe
 	if(AProjectWonkyCharacter* player  =Cast<AProjectWonkyCharacter>(_otherActor))
 	{
 		bGameWon = true;
+
+		OnWin();
 	}
 }
 
