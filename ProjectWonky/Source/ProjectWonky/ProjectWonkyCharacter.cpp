@@ -373,7 +373,12 @@ void AProjectWonkyCharacter::DelayedAttack()
 
 	if (canAttackEnemy)
 	{
-		UGameplayStatics::PlaySound2D(world, punchSound);
+		USoundBase* Sound = punchSounds[FMath::RandRange(0, punchSounds.Num() - 1)];
+
+		if (Sound)
+		{
+			UGameplayStatics::PlaySound2D(world, Sound);
+		}
 
 		UE_LOG(LogTemp, Warning, TEXT("Attack"))
 			//Attack Enemy here

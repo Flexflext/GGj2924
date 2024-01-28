@@ -29,6 +29,12 @@ public:
 	UFUNCTION()
 	void DeductPlayerLife();
 
+	UFUNCTION(BlueprintImplementableEvent)
+	void OnDeathEvent();
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void OnWin();
+
 private:
 	UPROPERTY(EditAnywhere,BlueprintReadOnly, Category = Comps, meta = (AllowPrivateAccess))
 	UStaticMeshComponent* winCollider;
@@ -40,4 +46,23 @@ private:
 	bool bGameWon;
 	UPROPERTY(VisibleAnywhere,BlueprintReadOnly, Category = Comps, meta = (AllowPrivateAccess))
 	bool bGameLost;
+
+
+	UPROPERTY()
+	FTimerHandle timer;
+
+private:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Sounds, meta = (AllowPrivateAccess = true))
+	TArray<class USoundBase*> playSounds;
+
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Sounds, meta = (AllowPrivateAccess = true))
+	class USoundBase* winSound;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Sounds, meta = (AllowPrivateAccess = true))
+	class USoundBase* looseSound;
+
+
+	
+
 };

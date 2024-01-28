@@ -221,9 +221,6 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Sounds, meta = (AllowPrivateAccess = true))
 	class USoundBase* getdamageSound;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Sounds, meta = (AllowPrivateAccess = true))
-	class USoundBase* punchSound;
-
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Sounds, meta = (AllowPrivateAccess = true))
 	class USoundBase* pickupSound;
@@ -242,6 +239,8 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Sounds, meta = (AllowPrivateAccess = true))
 	TArray<class USoundBase*> throwSounds;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Sounds, meta = (AllowPrivateAccess = true))
+	TArray<class USoundBase*> punchSounds;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Sounds, meta = (AllowPrivateAccess = true))
 	TArray<class USoundBase*> footSteps;
