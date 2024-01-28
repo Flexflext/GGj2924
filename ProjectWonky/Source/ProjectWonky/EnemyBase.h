@@ -101,9 +101,9 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = EnemyStats, meta = (AllowPrivateAccess))
 	bool bIsMoving;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = EnemyStats, meta = (AllowPrivateAccess))
+	bool bCanAttackPlayer;
 private:
-	UPROPERTY()
-	bool bcanAttackPlayer;
 
 	UFUNCTION()
 	virtual void AttackRange_BeginOverlap(UPrimitiveComponent* _overlappedComponent, AActor* _otherActor, UPrimitiveComponent* _otherComp, int32 _otherBodyIndex, bool _bFromSweep, const FHitResult& _sweepResult);
@@ -144,8 +144,6 @@ private:
 
 	UFUNCTION()
 	void ResetStaggered();
-	UFUNCTION()
-	void PlayRandomExpression();
 
 	UFUNCTION()
 	void TickAttack(float _dt);

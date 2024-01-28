@@ -148,7 +148,7 @@ protected:
 
 	UPROPERTY()
 	class AEnemyBase* enemyToAttack;
-	UPROPERTY()
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Combat, meta = (AllowPrivateAccess = true))
 	class ADestructibles* currDestructible;
 
 	UPROPERTY()

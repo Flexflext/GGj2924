@@ -26,8 +26,8 @@ AThrowableObject::AThrowableObject()
 
 	hitBox = CreateDefaultSubobject<UBoxComponent>(TEXT("HitBox"));
 	hitBox->SetupAttachment(mesh);
-	
 
+	verticalAdditive = 1.5f;
 }
 
 // Called when the game starts or when spawned
@@ -70,13 +70,13 @@ void AThrowableObject::Hit_BeginOverlap(UPrimitiveComponent* _overlappedComponen
 	{
 		AEnemyBase* enemy = Cast<AEnemyBase>(_otherActor);
 
-		FVector knockback = FVector(knockbackForce, 0, knockbackForce / 4);
+		FVector knockback = FVector(knockbackForce, 0, knockbackForce);
 		if (enemy->GetActorLocation().X < GetActorLocation().X)
 		{
-			knockback = FVector(-knockbackForce, 0, knockbackForce / 4);
+			knockback = FVector(-knockbackForce, 0, knockbackForce);
 		}
 		
-		
+		knockback.Z *= verticalAdditive;
 
 		enemy->Enemy_TakeDamage(damage, knockback);
 
