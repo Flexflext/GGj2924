@@ -80,6 +80,7 @@ AProjectWonkyCharacter::AProjectWonkyCharacter()
 
 
 	playerHealth = playerMaxHealth;
+	knockbackAdditive = 1.5f;
 }
 
 void AProjectWonkyCharacter::BeginPlay()
@@ -388,7 +389,7 @@ void AProjectWonkyCharacter::DelayedAttack()
 			knockback = FVector(-meeleknockbackForce, 0, meeleknockbackForce / 1.5);
 		}
 
-		knockback.Z *= -1;
+		knockback.Z *= knockbackAdditive;
 		enemyToAttack->Enemy_TakeDamage(meeleDamage, knockback);
 	}
 
