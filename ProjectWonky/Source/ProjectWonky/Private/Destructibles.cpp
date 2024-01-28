@@ -4,6 +4,7 @@
 #include "Destructibles.h"
 
 #include "ThrowableObject.h"
+#include "Kismet/GameplayStatics.h"
 
 // Sets default values
 ADestructibles::ADestructibles()
@@ -40,7 +41,10 @@ void ADestructibles::Destructible_TakeDamage(float _damage)
 		OnDestructibleDeath();
 	}
 	else
+	{
+		UGameplayStatics::PlaySound2D(GetWorld(), damage_sfx);
 		destructibleHealth -= _damage;
+	}
 }
 
 void ADestructibles::TickMaterialFade(float _dt)
@@ -53,6 +57,8 @@ void ADestructibles::OnDestructibleDeath()
 	bHasDied = true;
 
 	objectMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	UGameplayStatics::PlaySound2D(GetWorld(), death_sfx);
 
 	world->GetTimerManager().SetTimer(deathTimerHandle, this, &ADestructibles::CleanDestructibleDeath, deathTimer, false);
 }
