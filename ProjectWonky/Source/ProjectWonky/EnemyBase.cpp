@@ -275,7 +275,7 @@ void AEnemyBase::State_MoveToTarget()
 
 	aiController->MoveToLocation(adjplayerpos);
 
-	if (bcanAttackPlayer)
+	if (bCanAttackPlayer)
 		SetCurrentState(EEnemyStates::ES_Attack);
 }
 
