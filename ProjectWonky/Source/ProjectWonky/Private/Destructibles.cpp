@@ -15,6 +15,8 @@ ADestructibles::ADestructibles()
 
 	objectMesh = CreateDefaultSubobject<UStaticMeshComponent>("Object Mesh");
 	RootComponent = objectMesh;
+
+	materialDefaultValue = -1.f;
 }
 
 // Called when the game starts or when spawned
@@ -49,7 +51,12 @@ void ADestructibles::Destructible_TakeDamage(float _damage)
 
 void ADestructibles::TickMaterialFade(float _dt)
 {
-	objectMesh->SetScalarParameterValueOnMaterials("FadeAmount", materialDefaultValue += _dt);
+	float fade = materialDefaultValue += _dt * 2;
+
+	objectMesh->SetScalarParameterValueOnMaterials("FadeAmount", fade);
+
+	if (fade >= 1.f)
+		CleanDestructibleDeath();
 }
 
 void ADestructibles::OnDestructibleDeath()
@@ -58,9 +65,7 @@ void ADestructibles::OnDestructibleDeath()
 
 	objectMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
-	UGameplayStatics::PlaySound2D(GetWorld(), death_sfx);
-
-	world->GetTimerManager().SetTimer(deathTimerHandle, this, &ADestructibles::CleanDestructibleDeath, deathTimer, false);
+	UGameplayStatics::PlaySound2D(GetWorld(), death_sfx,1, 1, sfxStartPos);
 }
 
 void ADestructibles::CleanDestructibleDeath()

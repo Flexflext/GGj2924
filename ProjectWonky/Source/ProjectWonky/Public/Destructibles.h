@@ -24,6 +24,10 @@ public:
 
 	UFUNCTION()
 	void Destructible_TakeDamage(float _damage);
+
+	FORCEINLINE
+		bool GetHasDied() { return bHasDied; }
+
 private:
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category=Comps,meta=(AllowPrivateAccess))
 	UStaticMeshComponent* objectMesh;
@@ -32,12 +36,12 @@ private:
 	float destructibleHealth;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Stats, meta = (AllowPrivateAccess))
-	float deathTimer;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Stats, meta = (AllowPrivateAccess))
 	USoundBase* damage_sfx;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Stats, meta = (AllowPrivateAccess))
 	USoundBase* death_sfx;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Stats, meta = (AllowPrivateAccess))
+	float sfxStartPos;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Stats, meta = (AllowPrivateAccess))
 	FTimerHandle deathTimerHandle;
