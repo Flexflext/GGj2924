@@ -56,6 +56,8 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = EnemyStats, meta = (AllowPrivateAccess))
 	USoundBase* takeDamage_SFX;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = EnemyStats, meta = (AllowPrivateAccess))
+	USoundBase* fart_SFX;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = EnemyStats, meta = (AllowPrivateAccess))
 	TArray<USoundBase*> expressionSounds;

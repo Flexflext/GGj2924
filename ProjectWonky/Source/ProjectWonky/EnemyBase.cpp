@@ -224,6 +224,7 @@ void AEnemyBase::CommitAttack()
 	targetPlayer->LaunchCharacter(launchvelo, true,true);
 
 	niagaraComp->ActivateSystem();
+	UGameplayStatics::PlaySound2D(world, fart_SFX);
 
 	targetPlayer->Player_TakeDamage(enemyDamage);
 }
