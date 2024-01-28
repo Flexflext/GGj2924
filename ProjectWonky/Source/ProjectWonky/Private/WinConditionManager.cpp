@@ -3,6 +3,7 @@
 
 #include "WinConditionManager.h"
 
+#include "Kismet/GameplayStatics.h"
 #include "ProjectWonky/ProjectWonkyCharacter.h"
 
 // Sets default values
@@ -19,6 +20,7 @@ AWinConditionManager::AWinConditionManager()
 void AWinConditionManager::BeginPlay()
 {
 	Super::BeginPlay();
+
 
 	winCollider->OnComponentBeginOverlap.AddDynamic(this, &AWinConditionManager::OnPlayer_BeginOverlap);
 }
@@ -43,6 +45,12 @@ void AWinConditionManager::DeductPlayerLife()
 	playerLifes--;
 
 	if (playerLifes <= 0)
+	{
 		bGameLost = true;
+		OnDeathEvent();
+	}
+	//UGameplayStatics::PlaySound2D()
+
+	//UGameplayStatics::Sound
 }
 
