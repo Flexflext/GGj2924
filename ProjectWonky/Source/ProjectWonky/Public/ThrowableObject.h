@@ -51,6 +51,9 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Sounds, meta = (AllowPrivateAccess = true))
 	class USoundBase* impactSound;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Sounds, meta = (AllowPrivateAccess = true))
+	float verticalAdditive;
+
 	UPROPERTY()
 	FTimerHandle destroyTimerHandle;
 
