@@ -30,8 +30,6 @@ AEnemyBase::AEnemyBase()
 
 	materialDefaultValue = -1.f;
 
-	attackCooldown = 0.4f;
-
 	niagaraComp = CreateDefaultSubobject<UNiagaraComponent>("Niagara");
 	niagaraComp->SetupAttachment(GetRootComponent());
 }
@@ -108,7 +106,7 @@ void AEnemyBase::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent
 
 void AEnemyBase::FadeMaterial(float _dt)
 {
-	GetMesh()->SetScalarParameterValueOnMaterials("FadeAmount", materialDefaultValue += _dt);
+	GetMesh()->SetScalarParameterValueOnMaterials("FadeAmount", materialDefaultValue += _dt / 2);
 }
 
 void AEnemyBase::AttackRange_BeginOverlap(UPrimitiveComponent* _overlappedComponent, AActor* _otherActor,
@@ -117,9 +115,10 @@ void AEnemyBase::AttackRange_BeginOverlap(UPrimitiveComponent* _overlappedCompon
 	if (bIsStaggered || bHasDied)
 		return;
 
-	if (AProjectWonkyCharacter* player = Cast<AProjectWonkyCharacter>(_otherActor))
+	if (_otherComp->ComponentHasTag("Player"))
 	{
-		bcanAttackPlayer = true;
+		AProjectWonkyCharacter* player = Cast<AProjectWonkyCharacter>(_otherActor);
+		bCanAttackPlayer = true;
 
 		SetCurrentState(EEnemyStates::ES_Attack);
 
@@ -137,9 +136,10 @@ void AEnemyBase::AttackRange_EndOverlap(UPrimitiveComponent* _overlappedComponen
 	}
 
 	// Wenn der Player aus der attack range raus is soll der enemy nach ablauf des timer, bestimmt durch seinen attack cooldown, den spieler verfolgen
-	if (AProjectWonkyCharacter* player = Cast<AProjectWonkyCharacter>(_otherActor))
+	if (_otherComp->ComponentHasTag("Player"))
 	{
-		bcanAttackPlayer = false;
+		AProjectWonkyCharacter* player = Cast<AProjectWonkyCharacter>(_otherActor);
+		bCanAttackPlayer = false;
 
 		EEnemyStates newstate = EEnemyStates::ES_MoveToTarget;
 
@@ -153,8 +153,9 @@ void AEnemyBase::AggroRange_BeginOverlap(UPrimitiveComponent* _overlappedCompone
 	if (bIsStaggered || bHasDied)
 		return;
 
-	if (AProjectWonkyCharacter* player = Cast<AProjectWonkyCharacter>(_otherActor))
+	if (_otherComp->ComponentHasTag("Player"))
 	{
+		AProjectWonkyCharacter* player = Cast<AProjectWonkyCharacter>(_otherActor);
 		targetPlayer = player;
 		SetCurrentState(EEnemyStates::ES_MoveToTarget);
 	}
@@ -169,8 +170,9 @@ void AEnemyBase::AggroRange_EndOverlap(UPrimitiveComponent* _overlappedComponent
 		return;
 	}
 
-	if (AProjectWonkyCharacter* player = Cast<AProjectWonkyCharacter>(_otherActor))
+	if (_otherComp->ComponentHasTag("Player"))
 	{
+		AProjectWonkyCharacter* player = Cast<AProjectWonkyCharacter>(_otherActor);
 		targetPlayer = nullptr;
 		SetCurrentState(EEnemyStates::ES_Idle);
 	}
@@ -215,7 +217,7 @@ void AEnemyBase::Enemy_TakeDamage(float _damage, FVector _knockback)
 
 void AEnemyBase::CommitAttack()
 {
-	if (!targetPlayer || bHasDied || !bcanAttackPlayer )
+	if (!targetPlayer || bHasDied || !bCanAttackPlayer)
 		return;
 
 	// Noch schauen das ich das von der rotatrion abhängig mache
@@ -272,6 +274,9 @@ void AEnemyBase::State_MoveToTarget()
 	FVector adjplayerpos = FVector(targetPlayer->GetActorLocation().X, yDefault, GetActorLocation().Z);
 
 	aiController->MoveToLocation(adjplayerpos);
+
+	if (bcanAttackPlayer)
+		SetCurrentState(EEnemyStates::ES_Attack);
 }
 
 void AEnemyBase::State_Idle()

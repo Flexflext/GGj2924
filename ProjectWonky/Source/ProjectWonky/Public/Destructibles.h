@@ -39,6 +39,9 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Stats, meta = (AllowPrivateAccess))
 	USoundBase* death_sfx;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Stats, meta = (AllowPrivateAccess))
+	float sfxStartPos;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Stats, meta = (AllowPrivateAccess))
 	FTimerHandle deathTimerHandle;
 
