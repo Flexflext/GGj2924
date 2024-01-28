@@ -117,6 +117,9 @@ protected:
 	UFUNCTION()
 	void DelayedAttack();
 
+	UFUNCTION(BlueprintImplementableEvent)
+	void OnPunch(FVector _location);
+
 	UFUNCTION()
 	virtual void AttackRange_EndOverlap(UPrimitiveComponent* _overlappedComponent, AActor* _otherActor, UPrimitiveComponent* _otherComp, int32 _otherBodyIndex);
 	UFUNCTION()

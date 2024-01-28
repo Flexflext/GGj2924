@@ -389,8 +389,10 @@ void AProjectWonkyCharacter::DelayedAttack()
 			knockback = FVector(-meeleknockbackForce, 0, meeleknockbackForce / 1.5);
 		}
 
+		OnPunch(enemyToAttack->GetActorLocation());
 		knockback.Z *= knockbackAdditive;
 		enemyToAttack->Enemy_TakeDamage(meeleDamage, knockback);
+
 	}
 
 	if (currDestructible && !currDestructible->GetHasDied())
