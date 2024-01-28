@@ -51,8 +51,6 @@ void AEnemyBase::BeginPlay()
 	currentHealth = enemyMaxHealth;
 
 	startPos = GetActorLocation();
-
-	PlayRandomExpression();
 }
 
 // Called every frame
@@ -297,19 +295,6 @@ void AEnemyBase::ResetStaggered()
 		SetCurrentState(EEnemyStates::ES_MoveToTarget);
 	else
 		SetCurrentState(EEnemyStates::ES_Idle);
-}
-
-void AEnemyBase::PlayRandomExpression()
-{
-	if (bHasDied)
-		return;
-
-	int rnd = FMath::RandRange(0, expressionSounds.Num() - 1);
-	UGameplayStatics::PlaySound2D(world, expressionSounds[rnd]);
-
-	FTimerHandle handle;
-
-	world->GetTimerManager().SetTimer(handle, this, &AEnemyBase::PlayRandomExpression, 5.f,false);
 }
 
 void AEnemyBase::TickAttack(float _dt)

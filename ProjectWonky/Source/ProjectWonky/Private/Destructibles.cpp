@@ -51,7 +51,12 @@ void ADestructibles::Destructible_TakeDamage(float _damage)
 
 void ADestructibles::TickMaterialFade(float _dt)
 {
-	objectMesh->SetScalarParameterValueOnMaterials("FadeAmount", materialDefaultValue += _dt );
+	float fade = materialDefaultValue += _dt * 2;
+
+	objectMesh->SetScalarParameterValueOnMaterials("FadeAmount", fade);
+
+	if (fade >= 1.f)
+		CleanDestructibleDeath();
 }
 
 void ADestructibles::OnDestructibleDeath()
@@ -61,8 +66,6 @@ void ADestructibles::OnDestructibleDeath()
 	objectMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 	UGameplayStatics::PlaySound2D(GetWorld(), death_sfx,1, 1, sfxStartPos);
-
-	world->GetTimerManager().SetTimer(deathTimerHandle, this, &ADestructibles::CleanDestructibleDeath, deathTimer, false);
 }
 
 void ADestructibles::CleanDestructibleDeath()

@@ -144,8 +144,6 @@ private:
 
 	UFUNCTION()
 	void ResetStaggered();
-	UFUNCTION()
-	void PlayRandomExpression();
 
 	UFUNCTION()
 	void TickAttack(float _dt);

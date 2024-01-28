@@ -382,17 +382,17 @@ void AProjectWonkyCharacter::DelayedAttack()
 
 		UE_LOG(LogTemp, Warning, TEXT("Attack"))
 			//Attack Enemy here
-			FVector knockback = FVector(meeleknockbackForce, 0, meeleknockbackForce / 4);
+			FVector knockback = FVector(meeleknockbackForce, 0, meeleknockbackForce / 1.5);
 		if (enemyToAttack->GetActorLocation().X < GetActorLocation().X)
 		{
-			knockback = FVector(-meeleknockbackForce, 0, meeleknockbackForce / 4);
+			knockback = FVector(-meeleknockbackForce, 0, meeleknockbackForce / 1.5);
 		}
 
-
+		knockback.Z *= -1;
 		enemyToAttack->Enemy_TakeDamage(meeleDamage, knockback);
 	}
 
-	if (currDestructible)
+	if (currDestructible && !currDestructible->GetHasDied())
 		currDestructible->Destructible_TakeDamage(meeleDamage);
 }
 
