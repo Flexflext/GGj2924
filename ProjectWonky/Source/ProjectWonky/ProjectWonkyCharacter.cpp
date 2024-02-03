@@ -371,6 +371,7 @@ void AProjectWonkyCharacter::Throw()
 
 void AProjectWonkyCharacter::DelayedAttack()
 {
+	FVector knockback = FVector(meeleknockbackForce, 0, meeleknockbackForce / 1.5);
 
 	if (canAttackEnemy)
 	{
@@ -383,7 +384,6 @@ void AProjectWonkyCharacter::DelayedAttack()
 
 		UE_LOG(LogTemp, Warning, TEXT("Attack"))
 			//Attack Enemy here
-			FVector knockback = FVector(meeleknockbackForce, 0, meeleknockbackForce / 1.5);
 		if (enemyToAttack->GetActorLocation().X < GetActorLocation().X)
 		{
 			knockback = FVector(-meeleknockbackForce, 0, meeleknockbackForce / 1.5);
@@ -396,7 +396,7 @@ void AProjectWonkyCharacter::DelayedAttack()
 	}
 
 	if (currDestructible && !currDestructible->GetHasDied())
-		currDestructible->Destructible_TakeDamage(meeleDamage);
+		currDestructible->Destructible_TakeDamage(meeleDamage, knockback);
 }
 
 void AProjectWonkyCharacter::AttackRange_EndOverlap(UPrimitiveComponent* _overlappedComponent, AActor* _otherActor,

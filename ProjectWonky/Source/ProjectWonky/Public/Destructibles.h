@@ -23,14 +23,48 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	UFUNCTION()
-	void Destructible_TakeDamage(float _damage);
+	void Destructible_TakeDamage(float _damage, FVector _knockback);
 
 	FORCEINLINE
 		bool GetHasDied() { return bHasDied; }
 
 private:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Comps, meta = (AllowPrivateAccess))
+	UStaticMeshComponent* rootMesh;
+
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category=Comps,meta=(AllowPrivateAccess))
-	UStaticMeshComponent* objectMesh;
+	UStaticMeshComponent* objectMesh_0;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Comps, meta = (AllowPrivateAccess))
+	UStaticMeshComponent* objectMesh_1;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Comps, meta = (AllowPrivateAccess))
+	UStaticMeshComponent* objectMesh_2;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Comps, meta = (AllowPrivateAccess))
+	UStaticMeshComponent* objectMesh_3;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Comps, meta = (AllowPrivateAccess))
+	UStaticMeshComponent* objectMesh_4;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Comps, meta = (AllowPrivateAccess))
+	UStaticMeshComponent* objectMesh_5;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Comps, meta = (AllowPrivateAccess))
+	UStaticMeshComponent* objectMesh_6;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Comps, meta = (AllowPrivateAccess))
+	UStaticMeshComponent* objectMesh_7;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Comps, meta = (AllowPrivateAccess))
+	UStaticMeshComponent* objectMesh_8;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Comps, meta = (AllowPrivateAccess))
+	UStaticMeshComponent* objectMesh_9;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Comps, meta = (AllowPrivateAccess))
+	UStaticMeshComponent* objectMesh_10;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Comps, meta = (AllowPrivateAccess))
+	UStaticMeshComponent* objectMesh_11;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Comps, meta = (AllowPrivateAccess))
+	UStaticMeshComponent* objectMesh_12;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Comps, meta = (AllowPrivateAccess))
+	UStaticMeshComponent* objectMesh_13;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Comps, meta = (AllowPrivateAccess))
+	UStaticMeshComponent* objectMesh_14;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Comps, meta = (AllowPrivateAccess))
+	TArray<UStaticMeshComponent*> allMeshes;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Stats, meta = (AllowPrivateAccess))
 	float destructibleHealth;
@@ -60,7 +94,7 @@ private:
 private:
 
 	UFUNCTION()
-	void OnDestructibleDeath();
+	void OnDestructibleDeath(FVector _knockback);
 
 	UFUNCTION()
 	void CleanDestructibleDeath();

@@ -59,18 +59,18 @@ void AThrowableObject::Hit_BeginOverlap(UPrimitiveComponent* _overlappedComponen
 			false);
 		UGameplayStatics::PlaySound2D(GetWorld(), impactSound, 0.2f);
 	}
-	
+
+	FVector knockback = FVector(knockbackForce, 0, knockbackForce);
 
 	if (ADestructibles* destuctable = Cast<ADestructibles>(_otherActor))
 	{
-		destuctable->Destructible_TakeDamage(damage);
+		destuctable->Destructible_TakeDamage(damage, knockback);
 	}
 
 	if (_otherComp->ComponentHasTag("Enemy"))
 	{
 		AEnemyBase* enemy = Cast<AEnemyBase>(_otherActor);
 
-		FVector knockback = FVector(knockbackForce, 0, knockbackForce);
 		if (enemy->GetActorLocation().X < GetActorLocation().X)
 		{
 			knockback = FVector(-knockbackForce, 0, knockbackForce);
